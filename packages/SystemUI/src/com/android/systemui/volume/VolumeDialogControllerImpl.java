@@ -629,6 +629,16 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
         return stream == AudioManager.STREAM_RING || stream == AudioManager.STREAM_NOTIFICATION;
     }
 
+    private boolean updateLinkNotificationConfigW() {
+        boolean linkNotificationWithVolume = Settings.Secure.getInt(mContext.getContentResolver(),
+                Settings.Secure.VOLUME_LINK_NOTIFICATION, 1) == 1;
+        if (mState.linkedNotification == linkNotificationWithVolume) {
+            return false;
+        }
+        mState.linkedNotification = linkNotificationWithVolume;
+        return true;
+    }
+
     private boolean updateEffectsSuppressorW(ComponentName effectsSuppressor) {
         if (Objects.equals(mState.effectsSuppressor, effectsSuppressor)) return false;
         mState.effectsSuppressor = effectsSuppressor;
@@ -1091,6 +1101,8 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
                 Settings.System.getUriFor(Settings.System.ADAPTIVE_PLAYBACK_ENABLED);
         private final Uri ADAPTIVE_PLAYBACK_TIMEOUT_URI =
                 Settings.System.getUriFor(Settings.System.ADAPTIVE_PLAYBACK_TIMEOUT);
+        private final Uri VOLUME_LINK_NOTIFICATION_URI =
+                Settings.Secure.getUriFor(Settings.Secure.VOLUME_LINK_NOTIFICATION);
 
         public SettingObserver(Handler handler) {
             super(handler);
@@ -1099,11 +1111,12 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
         public void init() {
             mContext.getContentResolver().registerContentObserver(ZEN_MODE_URI, false, this);
             mContext.getContentResolver().registerContentObserver(ZEN_MODE_CONFIG_URI, false, this);
-            mContext.getContentResolver().registerContentObserver(ZEN_MODE_CONFIG_URI, false, this);
             mContext.getContentResolver().registerContentObserver(ADAPTIVE_PLAYBACK_ENABLED_URI,
                     false, this, UserHandle.USER_ALL);
             mContext.getContentResolver().registerContentObserver(ADAPTIVE_PLAYBACK_TIMEOUT_URI,
                     false, this, UserHandle.USER_ALL);
+            mContext.getContentResolver().registerContentObserver(VOLUME_LINK_NOTIFICATION_URI,
+                    false, this);
         }
 
         public void destroy() {
@@ -1128,6 +1141,9 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
                 mAdaptivePlaybackTimeout = Settings.System.getIntForUser(
                         mContext.getContentResolver(), Settings.System.ADAPTIVE_PLAYBACK_TIMEOUT,
                         30000, UserHandle.USER_CURRENT);
+            }
+            if (VOLUME_LINK_NOTIFICATION_URI.equals(uri)) {
+                changed = updateLinkNotificationConfigW();
             }
 
             if (changed) {
