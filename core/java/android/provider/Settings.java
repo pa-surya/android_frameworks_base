@@ -10570,6 +10570,12 @@ public final class Settings {
          * @hide
          */
         public static final String IMMERSIVE_NAVIGATION = "immersive_navigation";
+
+        /** Whether to allow one finger quick settings expansion on the right side of the statusbar.
+         *
+         * @hide
+         */
+        public static final String STATUS_BAR_QUICK_QS_PULLDOWN = "status_bar_quick_qs_pulldown";
     }
 
     /**
