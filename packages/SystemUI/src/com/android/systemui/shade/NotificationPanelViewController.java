@@ -18,6 +18,7 @@ package com.android.systemui.shade;
 
 import static android.app.StatusBarManager.WINDOW_STATE_SHOWING;
 import static android.provider.Settings.Secure.DOZE_DOUBLE_TAP_GESTURE;
+import static android.provider.Settings.Secure.STATUS_BAR_QUICK_QS_PULLDOWN;
 import static android.provider.Settings.System.GESTURE_DOUBLE_TAP;
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
@@ -234,6 +235,7 @@ import com.android.systemui.statusbar.policy.KeyguardUserSwitcherController;
 import com.android.systemui.statusbar.policy.KeyguardUserSwitcherView;
 import com.android.systemui.statusbar.policy.OnHeadsUpChangedListener;
 import com.android.systemui.statusbar.window.StatusBarWindowStateController;
+import com.android.systemui.tuner.TunerService;
 import com.android.systemui.unfold.SysUIUnfoldComponent;
 import com.android.systemui.util.Compile;
 import com.android.systemui.util.LargeScreenUtils;
@@ -369,6 +371,7 @@ public final class NotificationPanelViewController implements Dumpable {
     private final QuickSettingsController mQsController;
     private final InteractionJankMonitor mInteractionJankMonitor;
     private final TouchHandler mTouchHandler = new TouchHandler();
+    private final TunerService mTunerService;
 
     private long mDownTime;
     private boolean mTouchSlopExceededBeforeDown;
@@ -765,7 +768,8 @@ public final class NotificationPanelViewController implements Dumpable {
             DumpManager dumpManager,
             KeyguardLongPressViewModel keyguardLongPressViewModel,
             KeyguardInteractor keyguardInteractor,
-            UserTracker userTracker) {
+            UserTracker userTracker,
+            TunerService tunerService) {
         mInteractionJankMonitor = interactionJankMonitor;
         keyguardStateController.addCallback(new KeyguardStateController.Callback() {
             @Override
@@ -855,6 +859,7 @@ public final class NotificationPanelViewController implements Dumpable {
         mKeyguardQsUserSwitchComponentFactory = keyguardQsUserSwitchComponentFactory;
         mKeyguardUserSwitcherComponentFactory = keyguardUserSwitcherComponentFactory;
         mFragmentService = fragmentService;
+        mTunerService = tunerService;
         mSettingsChangeObserver = new SettingsChangeObserver(handler);
         mSplitShadeEnabled =
                 LargeScreenUtils.shouldUseSplitNotificationShade(mResources);
@@ -4535,7 +4540,8 @@ public final class NotificationPanelViewController implements Dumpable {
         positionClockAndNotifications(true /* forceUpdate */);
     }
 
-    private final class ShadeAttachStateChangeListener implements View.OnAttachStateChangeListener {
+    private final class ShadeAttachStateChangeListener implements View.OnAttachStateChangeListener,
+            TunerService.Tunable {
         @Override
         public void onViewAttachedToWindow(View v) {
             mFragmentService.getFragmentHostManager(mView)
@@ -4543,6 +4549,7 @@ public final class NotificationPanelViewController implements Dumpable {
             mStatusBarStateController.addCallback(mStatusBarStateListener);
             mStatusBarStateListener.onStateChanged(mStatusBarStateController.getState());
             mConfigurationController.addCallback(mConfigurationListener);
+            mTunerService.addTunable(this, STATUS_BAR_QUICK_QS_PULLDOWN);
             // Theme might have changed between inflating this view and attaching it to the
             // window, so
             // force a call to onThemeChanged
@@ -4559,7 +4566,16 @@ public final class NotificationPanelViewController implements Dumpable {
                     .removeTagListener(QS.TAG, mQsController.getQsFragmentListener());
             mStatusBarStateController.removeCallback(mStatusBarStateListener);
             mConfigurationController.removeCallback(mConfigurationListener);
+            mTunerService.removeTunable(this);
             mFalsingManager.removeTapListener(mFalsingTapListener);
+        }
+
+        @Override
+        public void onTuningChanged(String key, String newValue) {
+            if (STATUS_BAR_QUICK_QS_PULLDOWN.equals(key)) {
+                mQsController.setOneFingerQsIntercept(
+                        TunerService.parseIntegerSwitch(newValue, true));
+            }
         }
     }
 
