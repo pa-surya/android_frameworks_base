@@ -50,6 +50,7 @@ import com.android.systemui.qs.tiles.ReduceBrightColorsTile;
 import com.android.systemui.qs.tiles.RotationLockTile;
 import com.android.systemui.qs.tiles.ScreenRecordTile;
 import com.android.systemui.qs.tiles.UiModeNightTile;
+import com.android.systemui.qs.tiles.UsbTetherTile;
 import com.android.systemui.qs.tiles.UserTile;
 import com.android.systemui.qs.tiles.WifiTile;
 import com.android.systemui.qs.tiles.WorkModeTile;
@@ -95,6 +96,7 @@ public class QSFactoryImpl implements QSFactory {
     private final Provider<QuickAccessWalletTile> mQuickAccessWalletTileProvider;
     private final Provider<AODTile> mAODTileProvider;
     private final Provider<CaffeineTile> mCaffeineTileProvider;
+    private final Provider<UsbTetherTile> mUsbTetherTileProvider;
     private final Provider<DataSwitchTile> mDataSwitchTileProvider;
 
     private final Lazy<QSHost> mQsHostLazy;
@@ -133,6 +135,7 @@ public class QSFactoryImpl implements QSFactory {
             Provider<QuickAccessWalletTile> quickAccessWalletTileProvider,
             Provider<AODTile> aodTileProvider,
             Provider<CaffeineTile> caffeineTileProvider,
+            Provider<UsbTetherTile> usbTetherTileProvider,
             Provider<DataSwitchTile> dataSwitchTileProvider) {
         mQsHostLazy = qsHostLazy;
         mCustomTileBuilderProvider = customTileBuilderProvider;
@@ -166,6 +169,7 @@ public class QSFactoryImpl implements QSFactory {
         mQuickAccessWalletTileProvider = quickAccessWalletTileProvider;
         mAODTileProvider = aodTileProvider;
         mCaffeineTileProvider = caffeineTileProvider;
+        mUsbTetherTileProvider = usbTetherTileProvider;
         mDataSwitchTileProvider = dataSwitchTileProvider;
     }
 
@@ -237,6 +241,8 @@ public class QSFactoryImpl implements QSFactory {
                 return mAODTileProvider.get();
             case "caffeine":
                 return mCaffeineTileProvider.get();
+            case "usb_tether":
+                return mUsbTetherTileProvider.get();
             case "dataswitch":
                 return mDataSwitchTileProvider.get();
         }
