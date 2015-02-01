@@ -56,6 +56,7 @@ import com.android.systemui.qs.tiles.ReduceBrightColorsTile;
 import com.android.systemui.qs.tiles.RotationLockTile;
 import com.android.systemui.qs.tiles.ScreenRecordTile;
 import com.android.systemui.qs.tiles.UiModeNightTile;
+import com.android.systemui.qs.tiles.UsbTetherTile;
 import com.android.systemui.qs.tiles.WifiTile;
 import com.android.systemui.qs.tiles.WorkModeTile;
 import com.android.systemui.qs.tiles.DataSwitchTile;
@@ -101,6 +102,7 @@ public class QSFactoryImpl implements QSFactory {
     private final Provider<QRCodeScannerTile> mQRCodeScannerTileProvider;
     private final Provider<OneHandedModeTile> mOneHandedModeTileProvider;
     private final Provider<CaffeineTile> mCaffeineTileProvider;
+    private final Provider<UsbTetherTile> mUsbTetherTileProvider;
     private final Provider<DataSwitchTile> mDataSwitchTileProvider;
     private final Provider<HeadsUpTile> mHeadsUpTileProvider;
     private final Provider<DreamTile> mDreamTileProvider;
@@ -144,7 +146,8 @@ public class QSFactoryImpl implements QSFactory {
             Provider<CaffeineTile> caffeineTileProvider,
             Provider<DataSwitchTile> dataSwitchTileProvider,
             Provider<HeadsUpTile> headsUpTileProvider,
-            Provider<DreamTile> dreamTileProvider) {
+            Provider<DreamTile> dreamTileProvider,
+            Provider<UsbTetherTile> usbTetherTileProvider) {
         mQsHostLazy = qsHostLazy;
         mCustomTileBuilderProvider = customTileBuilderProvider;
 
@@ -178,6 +181,7 @@ public class QSFactoryImpl implements QSFactory {
         mOneHandedModeTileProvider = oneHandedModeTileProvider;
         mColorCorrectionTileProvider = colorCorrectionTileProvider;
         mCaffeineTileProvider = caffeineTileProvider;
+        mUsbTetherTileProvider = usbTetherTileProvider;
         mDataSwitchTileProvider = dataSwitchTileProvider;
         mHeadsUpTileProvider = headsUpTileProvider;
         mDreamTileProvider = dreamTileProvider;
@@ -256,6 +260,8 @@ public class QSFactoryImpl implements QSFactory {
                 return mColorCorrectionTileProvider.get();
             case "caffeine":
                 return mCaffeineTileProvider.get();
+            case "usb_tether":
+                return mUsbTetherTileProvider.get();
             case "dataswitch":
                 return mDataSwitchTileProvider.get();
             case "heads_up":
