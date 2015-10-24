@@ -675,6 +675,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     // Gesture key handler.
     private KeyHandler mKeyHandler;
 
+    private boolean mGlobalActionsOnLockEnable = true;
+
     // Fallback actions by key code.
     private final SparseArray<KeyCharacterMap.FallbackAction> mFallbackActions =
             new SparseArray<KeyCharacterMap.FallbackAction>();
@@ -925,6 +927,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.TORCH_POWER_BUTTON_GESTURE), false, this,
                     UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.LOCKSCREEN_ENABLE_POWER_MENU), false, this,
+                    UserHandle.USER_ALL);
+
             updateSettings();
         }
 
@@ -1778,6 +1784,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     }
 
     void showGlobalActionsInternal() {
+        if (isKeyguardLocked() && isKeyguardSecure(mCurrentUserId) &&
+                !mGlobalActionsOnLockEnable) {
+            return;
+        }
         if (mGlobalActions == null) {
             mGlobalActions = mGlobalActionsFactory.get();
         }
@@ -2900,6 +2910,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             mTorchGesture = Settings.System.getIntForUser(resolver,
                     Settings.System.TORCH_POWER_BUTTON_GESTURE,
                     0, UserHandle.USER_CURRENT) != 0;
+            mGlobalActionsOnLockEnable = Settings.System.getIntForUser(resolver,
+                    Settings.System.LOCKSCREEN_ENABLE_POWER_MENU, 1,
+                    UserHandle.USER_CURRENT) != 0;
         }
         if (updateRotation) {
             updateRotation(true);
