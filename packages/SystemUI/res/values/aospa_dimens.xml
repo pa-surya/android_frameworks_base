@@ -41,4 +41,7 @@
     <dimen name="tri_state_up_top_left_radius">24.0dip</dimen>
     <dimen name="tri_state_up_top_right_radius">24.0dip</dimen>
 
+    <!-- StatusBar burn-in protection -->
+    <dimen name="horizontal_max_shift">3.0dp</dimen>
+    <dimen name="vertical_max_shift">2.0dp</dimen>
 </resources>
