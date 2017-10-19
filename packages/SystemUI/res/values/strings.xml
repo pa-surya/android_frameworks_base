@@ -1639,6 +1639,9 @@
     <!-- Name of status bar -->
     <string name="status_bar">Status bar</string>
 
+    <!-- Title of statusbar tuner -->
+    <string name="status_bar_icons">Status bar icons</string>
+
     <!-- Name of overview -->
     <string name="overview">Overview</string>
 
