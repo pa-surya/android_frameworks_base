@@ -5030,6 +5030,23 @@ public final class Settings {
          */
         public static final String RINGTONE_VIBRATION_PATTERN = "ringtone_vibration_pattern";
 
+         /**
+         * Number of qs columns on landscape orientation
+         * @hide
+         */
+        public static final String OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE = "qs_layout_columns_landscape";
+
+         /**
+         * @hide
+         */
+        public static final String OMNI_QS_LAYOUT_COLUMNS = "qs_layout_columns";
+
+        /**
+         * Number of qs columns on quickbar
+         * @hide
+         */
+        public static final String QS_QUICKBAR_COLUMNS = "qs_quickbar_columns";
+
         /**
          * Force full screen for devices with cutout
          * @hide
@@ -5163,7 +5180,6 @@ public final class Settings {
             PRIVATE_SETTINGS.add(GESTURE_SINGLE_TAP);
             PRIVATE_SETTINGS.add(GESTURE_DRAW_V);
             PRIVATE_SETTINGS.add(GESTURE_DRAW_INVERSE_V);
-            PRIVATE_SETTINGS.add(GESTURE_DRAW_O);
             PRIVATE_SETTINGS.add(GESTURE_DRAW_M);
             PRIVATE_SETTINGS.add(GESTURE_DRAW_W);
             PRIVATE_SETTINGS.add(GESTURE_DRAW_S);
