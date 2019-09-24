@@ -6,6 +6,7 @@ import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.Configuration
+import android.os.PowerManager
 import android.os.SystemClock
 import android.util.DisplayMetrics
 import android.util.MathUtils
@@ -557,14 +558,19 @@ class DragDownHelper(
     private val falsingManager: FalsingManager,
     private val falsingCollector: FalsingCollector,
     private val dragDownCallback: LockscreenShadeTransitionController,
-    context: Context
+    context: Context,
 ) : Gefingerpoken {
 
     private var dragDownAmountOnStart = 0.0f
     lateinit var expandCallback: ExpandHelper.Callback
     lateinit var host: View
+    lateinit var goToSleep: Runnable
 
     private var minDragDistance = 0
+    private var doubleTapToSleepEnabled = false
+    private var statusBarHeaderHeight: Int = 0
+    private var lastDownEvent: Long = -1
+    private var doubleTapTimeout: Long = 0
     private var initialTouchX = 0f
     private var initialTouchY = 0f
     private var touchSlop = 0f
@@ -594,10 +600,17 @@ class DragDownHelper(
 
     fun updateResources(context: Context) {
         minDragDistance = context.resources.getDimensionPixelSize(
-                R.dimen.keyguard_drag_down_min_distance)
+            R.dimen.keyguard_drag_down_min_distance)
         val configuration = ViewConfiguration.get(context)
         touchSlop = configuration.scaledTouchSlop.toFloat()
         slopMultiplier = configuration.scaledAmbiguousGestureMultiplier
+        doubleTapTimeout = ViewConfiguration.getDoubleTapTimeout().toLong()
+        statusBarHeaderHeight = context
+            .resources.getDimensionPixelSize(R.dimen.status_bar_header_height_keyguard)
+        goToSleep = Runnable {
+            val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            pm.goToSleep(lastDownEvent)
+        }
     }
 
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
@@ -610,12 +623,25 @@ class DragDownHelper(
                 startingChild = null
                 initialTouchY = y
                 initialTouchX = x
+                if (doubleTapToSleepEnabled && y < statusBarHeaderHeight) {
+                    val eventTime = event.eventTime
+                    lastDownEvent = if (lastDownEvent != -1L) {
+                        val diff = eventTime - lastDownEvent
+                        if (diff < doubleTapTimeout) {
+                            goToSleep.run()
+                        }
+                        -1
+                    } else {
+                        eventTime
+                    }
+                }
             }
             MotionEvent.ACTION_MOVE -> {
                 val h = y - initialTouchY
                 // Adjust the touch slop if another gesture may be being performed.
                 val touchSlop = if (event.classification
-                        == MotionEvent.CLASSIFICATION_AMBIGUOUS_GESTURE)
+                    == MotionEvent.CLASSIFICATION_AMBIGUOUS_GESTURE
+                )
                     touchSlop * slopMultiplier
                 else
                     touchSlop
@@ -662,7 +688,8 @@ class DragDownHelper(
                 return true
             }
             MotionEvent.ACTION_UP -> if (!falsingManager.isUnlockingDisabled && !isFalseTouch &&
-                    dragDownCallback.canDragDown()) {
+                dragDownCallback.canDragDown()
+            ) {
                 dragDownCallback.onDraggedDown(startingChild, (y - initialTouchY).toInt())
                 if (startingChild != null) {
                     expandCallback.setUserLockedChild(startingChild, false)
@@ -720,7 +747,7 @@ class DragDownHelper(
             return
         }
         val anim = ObjectAnimator.ofInt(child, "actualHeight",
-                child.actualHeight, child.collapsedHeight)
+            child.actualHeight, child.collapsedHeight)
         anim.interpolator = Interpolators.FAST_OUT_SLOW_IN
         anim.duration = SPRING_BACK_ANIMATION_LENGTH_MS
         anim.addListener(object : AnimatorListenerAdapter() {
@@ -744,5 +771,9 @@ class DragDownHelper(
     private fun findView(x: Float, y: Float): ExpandableView? {
         host.getLocationOnScreen(temp2)
         return expandCallback.getChildAtRawPosition(x + temp2[0], y + temp2[1])
+    }
+
+    public fun updateDoubleTapToSleep(updateDoubleTapToSleep: Boolean) {
+        doubleTapToSleepEnabled = updateDoubleTapToSleep
     }
 }
