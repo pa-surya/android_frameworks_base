@@ -68,6 +68,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
+import android.database.ContentObserver;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.metrics.LogMaker;
@@ -690,6 +691,30 @@ public class StatusBar extends SystemUI implements
     private final ColorExtractor.OnColorsChangedListener mOnColorsChangedListener =
             (extractor, which) -> updateTheme();
 
+    private class CustomSettingsObserver extends ContentObserver {
+        CustomSettingsObserver(Handler handler) {
+            super(handler);
+        }
+
+        void observe() {
+            mContext.getContentResolver().registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.DOUBLE_TAP_SLEEP_GESTURE),
+                    false, this, UserHandle.USER_ALL);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            update();
+        }
+
+        public void update() {
+            if (mNotificationShadeWindowViewController != null) {
+                mNotificationShadeWindowViewController.updateSettings();
+            }
+        }
+    }
+
+    private CustomSettingsObserver mCustomSettingsObserver;
 
     /**
      * Public constructor for StatusBar.
@@ -1127,6 +1152,10 @@ public class StatusBar extends SystemUI implements
                 (requestTopUi, componentTag) -> mMainExecutor.execute(() ->
                         mNotificationShadeWindowController.setRequestTopUi(
                                 requestTopUi, componentTag))));
+
+        mCustomSettingsObserver = new CustomSettingsObserver(mMainHandler);
+        mCustomSettingsObserver.observe();
+        mCustomSettingsObserver.update();
     }
 
     // ================================================================================
