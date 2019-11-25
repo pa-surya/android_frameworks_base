@@ -333,10 +333,11 @@ public class WifiUtils {
      *
      * @param level The number of bars to show (0-4)
      * @param noInternet True if a connected Wi-Fi network cannot access the Internet
+     * @param context Holds context of activity / preference that called this method
      * @throws IllegalArgumentException if an invalid RSSI level is given.
      */
-    public static int getInternetIconResource(int level, boolean noInternet) {
-        return getInternetIconResource(level, noInternet, 0 /* standard */, false /* isReady */);
+    public static int getInternetIconResource(int level, boolean noInternet, Context context) {
+        return getInternetIconResource(level, noInternet, 0 /* standard */, false /* isReady */, context);
     }
 
     /**
@@ -344,27 +345,37 @@ public class WifiUtils {
      *
      * @param level The number of bars to show (0-4)
      * @param noInternet True if a connected Wi-Fi network cannot access the Internet
+     * @param standard Defines number of Wireless network standard (4-6)
+     * @param isReady True if a 6th Standard Wireless network is ready
+     * @param context Holds context of activity / preference that called this method
      * @throws IllegalArgumentException if an invalid RSSI level is given.
      */
-    public static int getInternetIconResource(int level, boolean noInternet, int standard, boolean isReady) {
+    public static int getInternetIconResource(int level, boolean noInternet, int standard, boolean isReady, Context context) {
         if (level < 0 || level >= WIFI_PIE.length) {
             throw new IllegalArgumentException("No Wifi icon found for level: " + level);
         }
         if (noInternet) return NO_INTERNET_WIFI_PIE[level];
-        switch (standard) {
-            case 4:
-                return WIFI_4_PIE[level];
-            case 5:
-                if (isReady) {
+        final boolean showNetworkStandard = context.getResources().getBoolean(
+                com.android.internal.R.bool.config_show_network_standard);
+
+        if (showNetworkStandard) {
+            switch (standard) {
+                case 4:
+                    return WIFI_4_PIE[level];
+                case 5:
+                    if (isReady) {
+                        return WIFI_6_PIE[level];
+                    } else {
+                        return WIFI_5_PIE[level];
+                    }
+                case 6:
                     return WIFI_6_PIE[level];
-                } else {
-                    return WIFI_5_PIE[level];
-                }
-            case 6:
-                return WIFI_6_PIE[level];
-            default:
-                return WIFI_PIE[level];
-       }
+                default:
+                    return WIFI_PIE[level];
+            }
+        } else {
+            return WIFI_PIE[level];
+        }
     }
 
     /**
@@ -384,8 +395,8 @@ public class WifiUtils {
          * @param noInternet True if a connected Wi-Fi network cannot access the Internet
          * @param level The number of bars to show (0-4)
          */
-        public Drawable getIcon(boolean noInternet, int level) {
-            return mContext.getDrawable(WifiUtils.getInternetIconResource(level, noInternet));
+        public Drawable getIcon(boolean noInternet, int level, Context context) {
+            return mContext.getDrawable(WifiUtils.getInternetIconResource(level, noInternet, context));
         }
     }
 

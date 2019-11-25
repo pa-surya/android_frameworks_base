@@ -810,15 +810,22 @@ public class PhoneStatusBarPolicy
     }
 
     private void updateHotspotIcon(int standard) {
-        if (standard == ScanResult.WIFI_STANDARD_11AX) {
-            mIconController.setIcon(mSlotHotspot, R.drawable.stat_sys_wifi_6_hotspot,
-                mResources.getString(R.string.accessibility_status_bar_hotspot));
-        } else if (standard == ScanResult.WIFI_STANDARD_11AC) {
-            mIconController.setIcon(mSlotHotspot, R.drawable.stat_sys_wifi_5_hotspot,
-                mResources.getString(R.string.accessibility_status_bar_hotspot));
-        } else if (standard == ScanResult.WIFI_STANDARD_11N) {
-            mIconController.setIcon(mSlotHotspot, R.drawable.stat_sys_wifi_4_hotspot,
-                mResources.getString(R.string.accessibility_status_bar_hotspot));
+        final boolean showNetworkStandard = mResources.getBoolean(
+                com.android.internal.R.bool.config_show_network_standard);
+        if (showNetworkStandard) {
+            if (standard == ScanResult.WIFI_STANDARD_11AX) {
+                mIconController.setIcon(mSlotHotspot, R.drawable.stat_sys_wifi_6_hotspot,
+                    mResources.getString(R.string.accessibility_status_bar_hotspot));
+            } else if (standard == ScanResult.WIFI_STANDARD_11AC) {
+                mIconController.setIcon(mSlotHotspot, R.drawable.stat_sys_wifi_5_hotspot,
+                    mResources.getString(R.string.accessibility_status_bar_hotspot));
+            } else if (standard == ScanResult.WIFI_STANDARD_11N) {
+                mIconController.setIcon(mSlotHotspot, R.drawable.stat_sys_wifi_4_hotspot,
+                    mResources.getString(R.string.accessibility_status_bar_hotspot));
+            } else {
+                mIconController.setIcon(mSlotHotspot, R.drawable.stat_sys_hotspot,
+                    mResources.getString(R.string.accessibility_status_bar_hotspot));
+            }
         } else {
             mIconController.setIcon(mSlotHotspot, R.drawable.stat_sys_hotspot,
                 mResources.getString(R.string.accessibility_status_bar_hotspot));

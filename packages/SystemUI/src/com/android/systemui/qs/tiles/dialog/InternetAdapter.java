@@ -175,7 +175,7 @@ public class InternetAdapter extends RecyclerView.Adapter<InternetAdapter.Intern
                 return null;
             }
             final Drawable drawable = mWifiIconInjector.getIcon(wifiEntry.shouldShowXLevelIcon(),
-                    wifiEntry.getLevel());
+                    wifiEntry.getLevel(), mContext);
             if (drawable == null) {
                 return null;
             }

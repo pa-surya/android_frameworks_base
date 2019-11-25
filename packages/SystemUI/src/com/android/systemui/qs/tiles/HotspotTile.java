@@ -141,6 +141,8 @@ public class HotspotTile extends QSTileImpl<BooleanState> {
         final int numConnectedDevices;
         final boolean isTransient = transientEnabling || mHotspotController.isHotspotTransient();
         final boolean isDataSaverEnabled;
+        final boolean showNetworkStandard = mContext.getResources().getBoolean(
+                com.android.internal.R.bool.config_show_network_standard);
 
         checkIfRestrictionEnforcedByAdminOnly(state, UserManager.DISALLOW_CONFIG_TETHERING);
 
@@ -162,7 +164,7 @@ public class HotspotTile extends QSTileImpl<BooleanState> {
         if (state.isTransient) {
             state.icon = ResourceIcon.get(
                     com.android.internal.R.drawable.ic_hotspot_transient_animation);
-        } else if (state.value) {
+        } else if (state.value && showNetworkStandard) {
             int standard = mWifiManager.getSoftApWifiStandard();
             if (standard == ScanResult.WIFI_STANDARD_11AX) {
                 state.icon = mWifi6EnabledStatic;

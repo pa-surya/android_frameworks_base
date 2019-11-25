@@ -381,7 +381,7 @@ public class InternetDialogController implements WifiEntry.DisconnectCallback,
             return null;
         }
         final Drawable drawable =
-                mWifiIconInjector.getIcon(wifiEntry.shouldShowXLevelIcon(), wifiEntry.getLevel());
+                mWifiIconInjector.getIcon(wifiEntry.shouldShowXLevelIcon(), wifiEntry.getLevel(), mContext);
         if (drawable == null) {
             return null;
         }

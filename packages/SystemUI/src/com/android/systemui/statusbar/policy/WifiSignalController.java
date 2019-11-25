@@ -242,17 +242,23 @@ public class WifiSignalController extends
 
 
     private void updateIconGroup() {
-	if (mCurrentState.wifiStandard == 4) {
-            mCurrentState.iconGroup = mWifi4IconGroup;
-        } else if (mCurrentState.wifiStandard == 5) {
-            mCurrentState.iconGroup = mCurrentState.isReady ? mWifi6IconGroup : mWifi5IconGroup;
-        } else if (mCurrentState.wifiStandard == 6) {
-            mCurrentState.iconGroup = mWifi6IconGroup;
+        final boolean showNetworkStandard = mContext.getResources().getBoolean(
+                com.android.internal.R.bool.config_show_network_standard);
+	if (showNetworkStandard) {
+            if (mCurrentState.wifiStandard == 4) {
+                mCurrentState.iconGroup = mWifi4IconGroup;
+            } else if (mCurrentState.wifiStandard == 5) {
+                mCurrentState.iconGroup = mCurrentState.isReady ? mWifi6IconGroup : mWifi5IconGroup;
+            } else if (mCurrentState.wifiStandard == 6) {
+                mCurrentState.iconGroup = mWifi6IconGroup;
+            } else {
+                mCurrentState.iconGroup = mDefaultWifiIconGroup;
+            }
         } else {
             mCurrentState.iconGroup = mDefaultWifiIconGroup;
         }
-
     }
+
     /**
      * Fetches wifi initial state replacing the initial sticky broadcast.
      */
