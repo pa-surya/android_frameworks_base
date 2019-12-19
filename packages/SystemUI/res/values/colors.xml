@@ -274,4 +274,6 @@
 
     <color name="volume_background_tint">#f2f2f2</color>
     <color name="divider_stroke_color">#E0E0E0</color>
+
+    <color name="qs_tile_background_color_disabled">#f2f2f2</color>
 </resources>
