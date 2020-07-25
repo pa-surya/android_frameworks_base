@@ -105,4 +105,9 @@
     <!-- Location indicator -->
     <java-symbol type="drawable" name="stat_sys_location" />
 
+    <!-- DC Dimming -->
+    <java-symbol type="string" name="config_deviceDcDimmingSysfsNode" />
+    <java-symbol type="string" name="config_deviceDcDimmingEnableValue" />
+    <java-symbol type="string" name="config_deviceDcDimmingDisableValue" />
+
 </resources>

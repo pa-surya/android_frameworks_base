@@ -73,4 +73,7 @@
     <!-- Name of the VoWiFi status bar icon. -->
     <string name="status_bar_vowifi">VoWiFi</string>
 
+    <!-- DC Dimming -->
+    <string name="quick_settings_dc_dimming_label">DC Dimming</string>
+
 </resources>

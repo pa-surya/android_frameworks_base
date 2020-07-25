@@ -6049,6 +6049,15 @@ public abstract class Context {
     public static final String AMBIENT_CONTEXT_SERVICE = "ambient_context";
 
     /**
+     * {@link android.hardware.display.DcDimManager} for accessing and setting locked apps state.
+     *
+     * @see #getSystemService
+     * @see android.hardware.display.DcDimmingManager
+     * @hide
+     */
+    public static final String DC_DIM_SERVICE = "dc_dim_service";
+
+    /**
      * Determine whether the given permission is allowed for a particular
      * process and user ID running in the system.
      *
