@@ -75,4 +75,10 @@
     <!-- DC Dimming -->
     <string name="quick_settings_dc_dimming_label">DC Dimming</string>
 
+    <!-- Name of the NFC status bar icon. -->
+    <string name="status_bar_nfc">NFC</string>
+
+    <!-- Accessibility label for NFC icon (not shown on screen) [CHAR LIMIT=NONE] -->
+    <string name="accessibility_status_bar_nfc">NFC</string>
+
 </resources>
