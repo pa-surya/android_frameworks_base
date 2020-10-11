@@ -102,6 +102,7 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
     private int mDefaultColumns;
     private Menu mColumnsSubMenu;
     private Menu mColumnsLandscapeSubMenu;
+    private Menu mRowsSubMenu;
     private Menu mQsColumnsSubMenu;
 
     @Inject
@@ -136,6 +137,10 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
         MenuItem menuItemLand = mToolbar.getMenu().findItem(R.id.menu_item_columns_landscape);
         if (menuItemLand != null) {
             mColumnsLandscapeSubMenu = menuItemLand.getSubMenu();
+        }
+        MenuItem menuItemRows = mToolbar.getMenu().findItem(R.id.menu_item_rows);
+        if (menuItemRows != null) {
+            mRowsSubMenu = menuItemRows.getSubMenu();
         }
         MenuItem menuItemQs = mToolbar.getMenu().findItem(R.id.menu_item_qs_columns);
         if (menuItemQs != null) {
@@ -272,6 +277,9 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
             if (mColumnsLandscapeSubMenu != null) {
                 mColumnsLandscapeSubMenu.close();
             }
+            if (mRowsSubMenu != null) {
+                mRowsSubMenu.close();
+            }
             if (mQsColumnsSubMenu != null) {
                 mQsColumnsSubMenu.close();
             }
@@ -346,6 +354,12 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
         } else if (id ==  R.id.menu_item_columns_landscape_eight) {
             Settings.System.putIntForUser(mContext.getContentResolver(),
                     Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, 8, UserHandle.USER_CURRENT);
+        } else if (id ==  R.id.menu_item_rows_two) {
+            Settings.System.putIntForUser(mContext.getContentResolver(),
+                    Settings.System.QS_LAYOUT_ROWS, 2, UserHandle.USER_CURRENT);
+        } else if (id ==  R.id.menu_item_rows_three) {
+            Settings.System.putIntForUser(mContext.getContentResolver(),
+                    Settings.System.QS_LAYOUT_ROWS, 3, UserHandle.USER_CURRENT);
         } else if (id ==  R.id.menu_item_qs_columns_six) {
             Settings.System.putIntForUser(mContext.getContentResolver(),
                     Settings.System.QS_QUICKBAR_COLUMNS, 6, UserHandle.USER_CURRENT);
@@ -472,19 +486,21 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
         boolean isPortrait = res.getConfiguration().orientation
                 == Configuration.ORIENTATION_PORTRAIT;
         int columns = Settings.System.getIntForUser(
-                mContext.getContentResolver(), Settings.System.OMNI_QS_LAYOUT_COLUMNS, mDefaultColumns,
+                mContext.getContentResolver(), Settings.System.OMNI_QS_LAYOUT_COLUMNS, 3,
                 UserHandle.USER_CURRENT);
         int columnsLandscape = Settings.System.getIntForUser(
-                mContext.getContentResolver(), Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, mDefaultColumns,
+                mContext.getContentResolver(), Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, 4,
+                UserHandle.USER_CURRENT);
+        int rows = Settings.System.getIntForUser(
+                mContext.getContentResolver(), Settings.System.QS_LAYOUT_ROWS, 3,
                 UserHandle.USER_CURRENT);
         mTileAdapter.setColumnCount(isPortrait ? columns : columnsLandscape);
         mLayout.setSpanCount(isPortrait ? columns : columnsLandscape);
-        updateColumnsMenu();
+        updateColumnsMenu(columns, columnsLandscape);
+        updateRowsMenu(rows);
     }
-     private void updateColumnsMenu() {
-        int columns = Settings.System.getIntForUser(
-                mContext.getContentResolver(), Settings.System.OMNI_QS_LAYOUT_COLUMNS, mDefaultColumns,
-                UserHandle.USER_CURRENT);
+
+    private void updateColumnsMenu(int columns, int columnsLandscape) {
         MenuItem menuItemThree = mToolbar.getMenu().findItem(R.id.menu_item_columns_three);
         menuItemThree.setChecked(columns == 3);
         MenuItem menuItemFour = mToolbar.getMenu().findItem(R.id.menu_item_columns_four);
@@ -520,5 +536,12 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
         menuItemEight.setChecked(qsColumns == 8);
         MenuItem menuItemAuto = mToolbar.getMenu().findItem(R.id.menu_item_qs_columns_auto);
         menuItemAuto.setChecked(qsColumns == -1);
+    }
+
+    private void updateRowsMenu(int rows) {
+        MenuItem menuItemTwo = mToolbar.getMenu().findItem(R.id.menu_item_rows_two);
+        menuItemTwo.setChecked(rows == 2);
+        MenuItem menuItemThree = mToolbar.getMenu().findItem(R.id.menu_item_rows_three);
+        menuItemThree.setChecked(rows == 3);
     }
 }
