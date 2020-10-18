@@ -4301,7 +4301,7 @@ public final class NotificationPanelViewController extends PanelViewController {
                 }
 
                 // Double tap to sleep on lockscreen
-                if ((mDoubleTapToWakeEnabled && isOnKeyguard())
+                if ((mDoubleTapToWakeEnabled && isOnKeyguard() && !mPulsing && !mDozing)
                         // Double tap to sleep on statusbar
                         || (mDoubleTapToSleepEnabled && !mQsExpanded
                         && event.getY() < mStatusBarMinHeight)) {
