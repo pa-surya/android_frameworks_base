@@ -95,6 +95,9 @@ public class NotificationShadeWindowViewController {
 
     private boolean mIsTrackingBarGesture = false;
 
+    // custom additions start
+    private boolean mDoubleTapEnabledNative;
+
     @Inject
     public NotificationShadeWindowViewController(
             LockscreenShadeTransitionController transitionController,
@@ -159,11 +162,21 @@ public class NotificationShadeWindowViewController {
                     break;
                 case Settings.Secure.DOZE_TAP_SCREEN_GESTURE:
                     mSingleTapEnabled = configuration.tapGestureEnabled(UserHandle.USER_CURRENT);
+                    break;
+                case Settings.System.GESTURE_DOUBLE_TAP:
+                    mDoubleTapEnabledNative = Settings.Secure.getIntForUser(
+                            mView.getContext().getContentResolver(),
+                            Settings.System.GESTURE_DOUBLE_TAP,
+                            mView.getContext().getResources().getInteger(
+                            com.android.internal.R.integer.config_doubleTapDefault),
+                            UserHandle.USER_CURRENT) == 1;
+                    break;
             }
         };
         mTunerService.addTunable(tunable,
                 Settings.Secure.DOZE_DOUBLE_TAP_GESTURE,
-                Settings.Secure.DOZE_TAP_SCREEN_GESTURE);
+                Settings.Secure.DOZE_TAP_SCREEN_GESTURE,
+                Settings.System.GESTURE_DOUBLE_TAP);
 
         GestureDetector.SimpleOnGestureListener gestureListener =
                 new GestureDetector.SimpleOnGestureListener() {
@@ -179,7 +192,7 @@ public class NotificationShadeWindowViewController {
 
                     @Override
                     public boolean onDoubleTap(MotionEvent e) {
-                        if (mDoubleTapEnabled || mSingleTapEnabled) {
+                        if (mDoubleTapEnabled || mSingleTapEnabled || mDoubleTapEnabledNative) {
                             mService.wakeUpIfDozing(
                                     SystemClock.uptimeMillis(), mView, "DOUBLE_TAP");
                             return true;

@@ -4259,7 +4259,7 @@ public class NotificationPanelViewController extends PanelViewController {
                     return false;
                 }
 
-                if (mBarState == StatusBarState.KEYGUARD &&
+                if (mBarState == StatusBarState.KEYGUARD && !mPulsing && !mDozing &&
                         Settings.System.getIntForUser(mView.getContext().getContentResolver(),
                         Settings.System.GESTURE_DOUBLE_TAP, mView.getContext().getResources()
                         .getInteger(com.android.internal.R.integer.config_doubleTapDefault),
