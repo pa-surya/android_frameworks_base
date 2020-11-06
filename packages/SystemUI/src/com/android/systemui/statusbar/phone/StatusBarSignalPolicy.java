@@ -45,6 +45,7 @@ public class StatusBarSignalPolicy implements NetworkControllerImpl.SignalCallba
     private final String mSlotWifi;
     private final String mSlotEthernet;
     private final String mSlotVpn;
+    private final String mSlotActivity;
 
     private final Context mContext;
     private final StatusBarIconController mIconController;
@@ -74,6 +75,7 @@ public class StatusBarSignalPolicy implements NetworkControllerImpl.SignalCallba
         mSlotWifi     = mContext.getString(com.android.internal.R.string.status_bar_wifi);
         mSlotEthernet = mContext.getString(com.android.internal.R.string.status_bar_ethernet);
         mSlotVpn      = mContext.getString(com.android.internal.R.string.status_bar_vpn);
+        mSlotActivity = mContext.getString(com.android.internal.R.string.status_bar_network_activity);
         mActivityEnabled = mContext.getResources().getBoolean(R.bool.config_showActivity);
 
         mIconController = iconController;
@@ -123,15 +125,18 @@ public class StatusBarSignalPolicy implements NetworkControllerImpl.SignalCallba
         boolean blockWifi = blockList.contains(mSlotWifi);
         boolean blockEthernet = blockList.contains(mSlotEthernet);
         boolean blockVpn = blockList.contains(mSlotVpn);
+        boolean activityEnabled = !blockList.contains(mSlotActivity);
 
         if (blockAirplane != mBlockAirplane || blockMobile != mBlockMobile
                 || blockEthernet != mBlockEthernet || blockWifi != mBlockWifi
-                || blockVpn != mBlockVpn) {
+                || blockVpn != mBlockVpn || activityEnabled != mActivityEnabled) {
+
             mBlockAirplane = blockAirplane;
             mBlockMobile = blockMobile;
             mBlockEthernet = blockEthernet;
             mBlockWifi = blockWifi || mForceBlockWifi;
             mBlockVpn = blockVpn;
+            mActivityEnabled = activityEnabled;
             // Re-register to get new callbacks.
             mNetworkController.removeCallback(this);
             mNetworkController.addCallback(this);

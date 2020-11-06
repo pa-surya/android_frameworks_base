@@ -542,6 +542,7 @@
     <string-array name="config_statusBarIconBlackList" translatable="false">
         <item>@*android:string/status_bar_rotate</item>
         <item>@*android:string/status_bar_headset</item>
+        <item>@*android:string/status_bar_network_activity</item>
     </string-array>
 
     <!-- A path similar to frameworks/base/core/res/res/values/config.xml
