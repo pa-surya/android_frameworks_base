@@ -89,7 +89,7 @@ public class TileAdapter extends RecyclerView.Adapter<Holder> implements TileSta
     private int mAccessibilityFromIndex;
     private QSTileHost mHost;
     private final UiEventLogger mUiEventLogger;
-    private final AccessibilityDelegateCompat mAccessibilityDelegate;
+    //private final AccessibilityDelegateCompat mAccessibilityDelegate;
     private RecyclerView mRecyclerView;
 
     public TileAdapter(Context context, UiEventLogger uiEventLogger) {
@@ -98,7 +98,7 @@ public class TileAdapter extends RecyclerView.Adapter<Holder> implements TileSta
         mItemTouchHelper = new ItemTouchHelper(mCallbacks);
         mDecoration = new TileItemDecoration(context);
         mMinNumTiles = context.getResources().getInteger(R.integer.quick_settings_min_num_tiles);
-        mAccessibilityDelegate = new TileAdapterDelegate();
+        //mAccessibilityDelegate = new TileAdapterDelegate();
     }
 
     @Override
@@ -317,7 +317,22 @@ public class TileAdapter extends RecyclerView.Adapter<Holder> implements TileSta
 
         holder.mTileView.handleStateChanged(info.state);
         holder.mTileView.setShowAppLabel(position > mEditIndex && !info.isSystem);
-        holder.mTileView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
+
+        holder.mTileView.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int position = holder.getLayoutPosition();
+                if (position < mEditIndex) {
+                    if (canRemoveTiles()) {
+                        move(position, mEditIndex);
+                    }
+                } else {
+                    move(position, mEditIndex);
+                }
+            }
+        });
+
+        /*holder.mTileView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         holder.mTileView.setClickable(true);
         holder.mTileView.setOnClickListener(null);
         holder.mTileView.setFocusable(true);
@@ -345,7 +360,7 @@ public class TileAdapter extends RecyclerView.Adapter<Holder> implements TileSta
         }
         if (position == mFocusIndex) {
             focusOnHolder(holder);
-        }
+        }*/
     }
 
     private void focusOnHolder(Holder holder) {
@@ -502,7 +517,7 @@ public class TileAdapter extends RecyclerView.Adapter<Holder> implements TileSta
                 mTileView.setBackground(null);
                 mTileView.getIcon().disableAnimation();
                 mTileView.setTag(this);
-                ViewCompat.setAccessibilityDelegate(mTileView, mAccessibilityDelegate);
+                //ViewCompat.setAccessibilityDelegate(mTileView, mAccessibilityDelegate);
             }
         }
 
