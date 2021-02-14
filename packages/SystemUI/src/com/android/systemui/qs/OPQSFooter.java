@@ -21,19 +21,6 @@ import static android.app.StatusBarManager.DISABLE2_QUICK_SETTINGS;
 import static com.android.systemui.util.InjectionInflationController.VIEW_CONTEXT;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.res.Configuration;
-import android.database.ContentObserver;
-import android.graphics.PorterDuff.Mode;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.RippleDrawable;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.UserHandle;
-import android.os.UserManager;
-import android.provider.Settings;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -64,7 +51,7 @@ public class OPQSFooter extends LinearLayout {
     private SettingsButton mSettingsButton;
     protected View mEdit;
     protected TouchAnimator mFooterAnimator;
-    private ActivityStarter mActivityStarter;
+    protected TouchAnimator mCarrierTextAnimator;
     private Boolean mExpanded;
     private Boolean mIsLandscape;
     private FrameLayout mFooterActions;
@@ -86,17 +73,20 @@ public class OPQSFooter extends LinearLayout {
         mDataUsageView = findViewById(R.id.data_usage_view);
         mDataUsageView.setVisibility(View.GONE);
         mFooterAnimator = createFooterAnimator();
+        mCarrierTextAnimator = createCarrierTextAnimator();
     }
 
     public void setExpansion(float headerExpansionFraction) {
         if (mFooterAnimator != null) {
             mFooterAnimator.setPosition(headerExpansionFraction);
         }
+        if (mCarrierTextAnimator != null) {
+            mCarrierTextAnimator.setPosition(headerExpansionFraction);
+        }
     }
 
     public void setExpanded(boolean expanded) {
-        if (mCarrierText != null && mDataUsageView != null) {
-            mCarrierText.setVisibility(expanded ? View.GONE : View.VISIBLE);
+        if (mDataUsageView != null) {
             mDataUsageView.setVisibility(expanded ? View.VISIBLE : View.GONE);
             if (expanded) {
                 mDataUsageView.updateUsage();
@@ -112,9 +102,15 @@ public class OPQSFooter extends LinearLayout {
     @Nullable
     private TouchAnimator createFooterAnimator() {
         return new TouchAnimator.Builder()
-                .addFloat(mEdit, "alpha", 0, 1)
-                .addFloat(mDataUsageView, "alpha", 0, 1)
-                .setStartDelay(0.9f)
+                .addFloat(mEdit, "alpha", 0, 0, 1)
+                .addFloat(mDataUsageView, "alpha", 0, 0, 1)
+                .build();
+    }
+
+    @Nullable
+    private TouchAnimator createCarrierTextAnimator() {
+        return new TouchAnimator.Builder()
+                .addFloat(mCarrierText, "alpha", 1, 0, 0)
                 .build();
     }
 
