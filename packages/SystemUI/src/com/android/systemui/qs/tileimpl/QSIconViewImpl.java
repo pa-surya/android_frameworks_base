@@ -180,8 +180,10 @@ public class QSIconViewImpl extends QSIconView {
             ((AlphaControlledSlashImageView)iv)
                     .setFinalImageTintList(ColorStateList.valueOf(toColor));
         }
-        boolean setQsUseNewTint = Settings.System.getIntForUser(getContext().getContentResolver(),
-                Settings.System.QS_PANEL_BG_USE_NEW_TINT, 1, UserHandle.USER_CURRENT) == 1;
+
+        int setQsUseNewTint = Settings.System.getIntForUser(getContext().getContentResolver(),
+                Settings.System.QS_PANEL_BG_USE_NEW_TINT, 2, UserHandle.USER_CURRENT);
+
         if (mAnimationEnabled && ValueAnimator.areAnimatorsEnabled()) {
             final float fromAlpha = Color.alpha(fromColor);
             final float toAlpha = Color.alpha(toColor);
@@ -195,7 +197,7 @@ public class QSIconViewImpl extends QSIconView {
                 int alpha = (int) (fromAlpha + (toAlpha - fromAlpha) * fraction);
                 int channel = (int) (fromChannel + (toChannel - fromChannel) * fraction);
 
-                if (setQsUseNewTint) {
+                if (setQsUseNewTint == 1 || setQsUseNewTint == 2 || setQsUseNewTint == 3) {
                     setTint(iv, toColor);
                 } else {
                     setTint(iv, Color.argb(alpha, channel, channel, channel));
