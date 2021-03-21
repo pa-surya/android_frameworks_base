@@ -738,7 +738,7 @@ public class KeyHandler {
 
     private void doHapticFeedback(boolean success) {
         final boolean hapticsEnabled = Settings.System.getIntForUser(mContext.getContentResolver(),
-                Settings.System.HAPTIC_FEEDBACK_ENABLED, 0, UserHandle.USER_CURRENT) != 0;
+                Settings.System.GESTURES_VIBRATION_ENABLED, 1, UserHandle.USER_CURRENT) != 0;
         if (hapticsEnabled && mVibrator != null) {
             if (success) {
                 mVibrator.vibrate(mVibePattern, -1, VIBRATION_ATTRIBUTES);

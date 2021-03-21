@@ -4919,6 +4919,12 @@ public final class Settings {
        public static final String GESTURES_ENABLED = "gestures_enabled";
 
        /**
+        * Controls whether to perform haptic feedback on intercepting gestures.
+        * @hide
+        */
+       public static final String GESTURES_VIBRATION_ENABLED = "gestures_vibration_enabled";
+
+       /**
         * Controls whether double tap to wake is enabled.
         * @hide
         */
