@@ -716,11 +716,6 @@ public final class DisplayCutout {
         if (TextUtils.isEmpty(spec) && waterfallInsets.equals(Insets.NONE)) {
             return NULL_PAIR;
         }
-        int disableRoundedCorner =
-            SystemProperties.getInt("vendor.display.disable_rounded_corner", 0);
-        if (disableRoundedCorner == 1) {
-            return NULL_PAIR;
-        }
         synchronized (CACHE_LOCK) {
             if (spec.equals(sCachedSpec) && sCachedDisplayWidth == displayWidth
                     && sCachedDisplayHeight == displayHeight
