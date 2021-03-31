@@ -39,6 +39,9 @@
 #define CREATE_ERROR(...) StringPrintf("%s:%d: ", __FILE__, __LINE__). \
                               append(StringPrintf(__VA_ARGS__))
 
+#define HWCAP_PACA (1 << 30)
+#define AT_HWCAP 16
+
 namespace android {
 namespace zygote {
 

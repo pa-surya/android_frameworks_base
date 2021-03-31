@@ -34,6 +34,7 @@
 #include <sys/mount.h>
 #include <linux/fs.h>
 #include <sys/types.h>
+#include <sys/auxv.h>
 #include <dirent.h>
 
 #include <array>

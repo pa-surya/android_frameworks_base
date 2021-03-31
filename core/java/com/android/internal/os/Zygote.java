@@ -414,7 +414,7 @@ public final class Zygote {
         Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "PostFork");
 
         if (gids != null && gids.length > 0) {
-            NetworkUtilsInternal.setAllowNetworkingForProcess(containsInetGid(gids));
+            NetworkUtils.setAllowNetworkingForProcess(containsInetGid(gids));
         }
 
         // Set the Java Language thread priority to the default value for new apps.

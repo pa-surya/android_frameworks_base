@@ -183,9 +183,9 @@ class ZygoteConnection {
                     return null;
                 }
 
-                if (parsedArgs.mApiDenylistExemptions != null) {
-                    return handleApiDenylistExemptions(zygoteServer,
-                            parsedArgs.mApiDenylistExemptions);
+                if (parsedArgs.mApiBlacklistExemptions != null) {
+                    return handleApiBlacklistExemptions(zygoteServer,
+                            parsedArgs.mApiBlacklistExemptions);
                 }
 
                 if (parsedArgs.mHiddenApiAccessLogSampleRate != -1
