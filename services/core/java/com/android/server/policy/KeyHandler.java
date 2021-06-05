@@ -552,6 +552,7 @@ public class KeyHandler {
         mPowerManagerInternal.powerHint(PowerHint.INTERACTION, 0);
 
         boolean handled;
+        boolean skipVibration = false;
 
         switch(gesture) {
             case DISABLED:
@@ -581,6 +582,7 @@ public class KeyHandler {
                 }
                 mPowerManager.wakeUp(SystemClock.uptimeMillis());
                 handled = true;
+                skipVibration = true;
                 break;
             case DIALER:
                 mPowerManager.wakeUp(SystemClock.uptimeMillis());
@@ -618,7 +620,9 @@ public class KeyHandler {
         }
 
         releaseGestureWakeLock();
-        doHapticFeedback(handled);
+
+        if (!skipVibration)
+            doHapticFeedback(handled);
     }
 
     private void acquireGestureWakeLock() {
