@@ -106,6 +106,7 @@ public class BrightnessController implements ToggleSlider.Listener {
     private boolean mListening;
     private boolean mExternalChange;
     private boolean mControlValueInitialized;
+    private boolean mSliderVisible;
 
     private ValueAnimator mSliderAnimator;
 
@@ -351,7 +352,7 @@ public class BrightnessController implements ToggleSlider.Listener {
         mDisplayManager = context.getSystemService(DisplayManager.class);
         mVrManager = IVrManager.Stub.asInterface(ServiceManager.getService(
                 Context.VR_SERVICE));
-        
+
         updateIcon(mAutomatic);
     }
 
@@ -469,18 +470,21 @@ public class BrightnessController implements ToggleSlider.Listener {
         if (levelIcon == null) {
             return;
         }
+        mSliderValue = mControl.getValue();
         if (mIsVrModeEnabled) {
-            if (((float) mSliderValue) <= mMinimumBacklightForVr) {
+            if (convertGammaToLinearFloat(mSliderValue, mMinimumBacklightForVr,
+                    mMaximumBacklightForVr) <= mMinimumBacklightForVr) {
                 levelIcon.setImageResource(R.drawable.ic_qs_brightness_low);
-            } else if (mSliderValue >= mSliderMax - 1) {
+            } else if (mSliderValue >= mSliderMax/1.2) {
                 levelIcon.setImageResource(R.drawable.ic_qs_brightness_high);
             } else {
                 levelIcon.setImageResource(R.drawable.ic_qs_brightness_medium);
             }
         } else {
-            if (((float) mSliderValue) <= mMinimumBacklight) {
+            if (convertGammaToLinearFloat(mSliderValue, mMinimumBacklight,
+                    mMaximumBacklight) <= mMinimumBacklight*5) {
                 levelIcon.setImageResource(R.drawable.ic_qs_brightness_low);
-            } else if (mSliderValue >= mSliderMax - 1) {
+            } else if (mSliderValue >= mSliderMax/1.2) {
                 levelIcon.setImageResource(R.drawable.ic_qs_brightness_high);
             } else {
                 levelIcon.setImageResource(R.drawable.ic_qs_brightness_medium);
@@ -518,8 +522,9 @@ public class BrightnessController implements ToggleSlider.Listener {
     }
 
     private void animateSliderTo(int target) {
-        if (!mControlValueInitialized) {
-            // Don't animate the first value since its default state isn't meaningful to users.
+        mControlValueInitialized |= mSliderVisible;
+        if (!mControlValueInitialized || !mSliderVisible) {
+            // Don't animate if the slider is not visible
             mControl.setValue(target);
             mControlValueInitialized = true;
         }
@@ -545,6 +550,10 @@ public class BrightnessController implements ToggleSlider.Listener {
     public void setMirrorView(View v) {
         mMirrorIcon = v.findViewById(R.id.brightness_icon);
         mMirrorLevelIcon = v.findViewById(R.id.brightness_level);
+    }
+
+    public void setSliderVisible(boolean vis) {
+        mSliderVisible = vis;
     }
 
 }

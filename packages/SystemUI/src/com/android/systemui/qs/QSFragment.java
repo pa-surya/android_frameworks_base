@@ -369,6 +369,9 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
     @Override
     public void setListening(boolean listening) {
         if (DEBUG) Log.d(TAG, "setListening " + listening);
+        if (mListening != listening) {
+            mHeader.getHeaderQsPanel().setFullyCollapsed(listening);
+        }
         mListening = listening;
         mQSContainerImplController.setListening(listening);
         mHeader.setListening(listening);
@@ -378,6 +381,7 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
 
     @Override
     public void setHeaderListening(boolean listening) {
+        mHeader.getHeaderQsPanel().setBrightnessListening(listening);
         mHeader.setListening(listening);
         mFooter.setListening(listening);
     }
@@ -395,6 +399,10 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
                             : headerTranslation);
         }
         int currentHeight = getView().getHeight();
+        if (mLastHeaderTranslation != headerTranslation || mLastQSExpansion != expansion) {
+            mQSPanel.notifyExpansion();
+            mHeader.getHeaderQsPanel().notifyExpansion();
+        }
         mLastHeaderTranslation = headerTranslation;
         if (expansion == mLastQSExpansion && mLastKeyguardAndExpanded == onKeyguardAndExpanded
                 && mLastViewHeight == currentHeight) {
@@ -421,6 +429,8 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
         if (fullyCollapsed) {
             mQSPanelScrollView.setScrollY(0);
         }
+        mQSPanel.setFullyCollapsed(fullyCollapsed);
+        mHeader.getHeaderQsPanel().setFullyCollapsed(fullyCollapsed);
         mQSDetail.setFullyExpanded(fullyExpanded);
 
         if (!fullyExpanded) {

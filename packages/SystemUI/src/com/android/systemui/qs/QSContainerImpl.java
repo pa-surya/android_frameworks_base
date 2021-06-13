@@ -101,6 +101,8 @@ public class QSContainerImpl extends FrameLayout {
                 mAnimateBottomOnNextLayout = true;
             }
         });
+        mQSPanel.setDragHandle(mDragHandle);
+        mHeader.getHeaderQsPanel().setDragHandle(mDragHandle);
 
 
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);

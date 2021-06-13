@@ -53,9 +53,6 @@ public class BrightnessMirrorController
         mBrightnessMirror = statusBarWindow.findViewById(R.id.brightness_mirror);
         mNotificationPanel = notificationPanelViewController;
         mDepthController = notificationShadeDepthController;
-        mNotificationPanel.setPanelAlphaEndAction(() -> {
-            mBrightnessMirror.setVisibility(View.INVISIBLE);
-        });
         mVisibilityCallback = visibilityCallback;
     }
 
@@ -67,6 +64,9 @@ public class BrightnessMirrorController
     }
 
     public void hideMirror() {
+        mNotificationPanel.setPanelAlphaEndAction(() -> {
+            mBrightnessMirror.setVisibility(View.INVISIBLE);
+        });
         mVisibilityCallback.accept(false);
         mNotificationPanel.setPanelAlpha(255, true /* animate */);
         mDepthController.setBrightnessMirrorVisible(false);
