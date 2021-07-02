@@ -439,6 +439,8 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
                     mContext.getContentResolver(), Settings.System.QS_LAYOUT_ROWS, 3,
                     UserHandle.USER_CURRENT);
             getTileLayout().setMinRows(mIsLandscape ? 1 : rows);
+        } else {
+            getTileLayout().setMinRows(2);
         }
     }
 
@@ -759,6 +761,17 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
                 - ((mIsLandscape && mDragHandle != null) ? mDragHandle.getHeight() : 0);
     }
 
+    void onQsTintChange(int newValue) {
+        mBrightnessController.updateTintColor(newValue);
+        if (mFooterPageIndicator != null) {
+            mFooterPageIndicator.updateTintColor(newValue);
+        }
+        for (TileRecord r : mRecords) {
+            r.tileView.updateTintColor(newValue);
+            r.tileView.onStateChanged(r.tile.getState());
+        }
+    }
+
     boolean isMediaHostVisible() {
         return mMediaHost.getVisible();
     }
@@ -802,6 +815,7 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
             brightnessSlider.setMirror(mirrorSlider);
             brightnessSlider.setMirrorController(mBrightnessMirrorController);
             mBrightnessController.setMirrorView(mBrightnessMirrorController.getMirror());
+            mBrightnessController.updateTintColor();
         }
     }
 

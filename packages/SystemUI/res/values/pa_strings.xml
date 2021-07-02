@@ -78,10 +78,9 @@
     <string name="qs_menu_item_columns_four">4</string>
     <string name="qs_menu_item_columns_five">5</string>
     <string name="qs_menu_item_columns_six">6</string>
-    <string name="qs_menu_item_columns_seven">7</string>
-    <string name="qs_menu_item_columns_eight">8</string>
-    <string name="qs_menu_item_columns_nine">9</string>
     <string name="qs_menu_item_reset">Reset</string>
-    <string name="qs_menu_item_qs_columns">Quickbar columns</string>
-    <string name="qs_menu_item_columns_auto">Automatic</string>
+    <string name="qs_menu_item_qs_tint">QS Tint</string>
+    <string name="qs_menu_item_tint_disabled">Default</string>
+    <string name="qs_menu_item_tint_accent">Accent</string>
+    <string name="qs_menu_item_tint_oos">Oxygen OS</string>
 </resources>

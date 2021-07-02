@@ -5054,16 +5054,16 @@ public final class Settings {
         public static final String QS_QUICKBAR_COLUMNS = "qs_quickbar_columns";
 
         /**
-         * Force full screen for devices with cutout
-         * @hide
-         */
-        public static final String FORCE_FULLSCREEN_CUTOUT_APPS = "force_full_screen_cutout_apps";
-
-        /**
          * Whether to use new QS panel bg tint or not
          * @hide
          */
         public static final String QS_PANEL_BG_USE_NEW_TINT = "qs_panel_bg_use_new_tint";
+
+        /**
+         * Force full screen for devices with cutout
+         * @hide
+         */
+        public static final String FORCE_FULLSCREEN_CUTOUT_APPS = "force_full_screen_cutout_apps";
 
         /**
          * Keys we no longer back up under the current schema, but want to continue to

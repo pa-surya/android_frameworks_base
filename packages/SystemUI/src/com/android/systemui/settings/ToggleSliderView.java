@@ -17,6 +17,7 @@
 package com.android.systemui.settings;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
@@ -119,6 +120,16 @@ public class ToggleSliderView extends RelativeLayout implements ToggleSlider {
 
     public void setOnChangedListener(Listener l) {
         mListener = l;
+    }
+
+    @Override
+    public void updateTint(int color) {
+        mSlider.setProgressTintList(ColorStateList.valueOf(color));
+        mSlider.setProgressBackgroundTintList(ColorStateList.valueOf(color));
+        mSlider.setThumbTintList(ColorStateList.valueOf(color));
+        if (mMirror != null && mOtherSlider != null) {
+            mMirror.updateTint(color);
+        }
     }
 
     @Override

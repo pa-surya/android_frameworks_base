@@ -54,6 +54,7 @@ import com.android.systemui.plugins.qs.QS;
 import com.android.systemui.plugins.qs.QSTile;
 import com.android.systemui.qs.QSDetailClipper;
 import com.android.systemui.qs.QSEditEvent;
+import com.android.systemui.qs.QSFragment;
 import com.android.systemui.qs.QSTileHost;
 import com.android.systemui.qs.QuickQSPanel;
 import com.android.systemui.statusbar.phone.LightBarController;
@@ -103,7 +104,7 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
     private Menu mColumnsSubMenu;
     private Menu mColumnsLandscapeSubMenu;
     private Menu mRowsSubMenu;
-    private Menu mQsColumnsSubMenu;
+    private Menu mQsTintSubMenu;
 
     @Inject
     public QSCustomizer(Context context, AttributeSet attrs,
@@ -142,11 +143,10 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
         if (menuItemRows != null) {
             mRowsSubMenu = menuItemRows.getSubMenu();
         }
-        MenuItem menuItemQs = mToolbar.getMenu().findItem(R.id.menu_item_qs_columns);
-        if (menuItemQs != null) {
-            mQsColumnsSubMenu = menuItemQs.getSubMenu();
+        MenuItem menuItemTint = mToolbar.getMenu().findItem(R.id.menu_item_tint_qs);
+        if (menuItemTint != null) {
+            mQsTintSubMenu = menuItemTint.getSubMenu();
         }
-        updateColumnsMenu();
 
         int accentColor = Utils.getColorAccentDefaultColor(context);
         mToolbar.setTitleTextColor(accentColor);
@@ -280,8 +280,8 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
             if (mRowsSubMenu != null) {
                 mRowsSubMenu.close();
             }
-            if (mQsColumnsSubMenu != null) {
-                mQsColumnsSubMenu.close();
+            if (mQsTintSubMenu != null) {
+                mQsTintSubMenu.close();
             }
             mToolbar.dismissPopupMenus();
             mClipper.cancelAnimator();
@@ -333,12 +333,6 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
         } else if (id == R.id.menu_item_columns_six) {
             Settings.System.putIntForUser(mContext.getContentResolver(),
                     Settings.System.OMNI_QS_LAYOUT_COLUMNS, 6, UserHandle.USER_CURRENT);
-        } else if (id == R.id.menu_item_columns_seven) {
-            Settings.System.putIntForUser(mContext.getContentResolver(),
-                    Settings.System.OMNI_QS_LAYOUT_COLUMNS, 7, UserHandle.USER_CURRENT);
-        } else if (id == R.id.menu_item_columns_eight) {
-            Settings.System.putIntForUser(mContext.getContentResolver(),
-                    Settings.System.OMNI_QS_LAYOUT_COLUMNS, 8, UserHandle.USER_CURRENT);
         } else if (id == R.id.menu_item_columns_landscape_four) {
             Settings.System.putIntForUser(mContext.getContentResolver(),
                     Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, 4, UserHandle.USER_CURRENT);
@@ -348,34 +342,33 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
         } else if (id == R.id.menu_item_columns_landscape_six) {
             Settings.System.putIntForUser(mContext.getContentResolver(),
                     Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, 6, UserHandle.USER_CURRENT);
-        } else if (id == R.id.menu_item_columns_landscape_seven) {
-            Settings.System.putIntForUser(mContext.getContentResolver(),
-                    Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, 7, UserHandle.USER_CURRENT);
-        } else if (id ==  R.id.menu_item_columns_landscape_eight) {
-            Settings.System.putIntForUser(mContext.getContentResolver(),
-                    Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, 8, UserHandle.USER_CURRENT);
         } else if (id ==  R.id.menu_item_rows_two) {
             Settings.System.putIntForUser(mContext.getContentResolver(),
                     Settings.System.QS_LAYOUT_ROWS, 2, UserHandle.USER_CURRENT);
         } else if (id ==  R.id.menu_item_rows_three) {
             Settings.System.putIntForUser(mContext.getContentResolver(),
                     Settings.System.QS_LAYOUT_ROWS, 3, UserHandle.USER_CURRENT);
-        } else if (id ==  R.id.menu_item_qs_columns_six) {
+        } else if (id ==  R.id.menu_item_tint_disabled) {
             Settings.System.putIntForUser(mContext.getContentResolver(),
-                    Settings.System.QS_QUICKBAR_COLUMNS, 6, UserHandle.USER_CURRENT);
-        } else if (id ==  R.id.menu_item_qs_columns_seven) {
+                    Settings.System.QS_PANEL_BG_USE_NEW_TINT, 0, UserHandle.USER_CURRENT);
+            onQsTintChange(0);
+        } else if (id ==  R.id.menu_item_tint_accent) {
             Settings.System.putIntForUser(mContext.getContentResolver(),
-                    Settings.System.QS_QUICKBAR_COLUMNS, 7, UserHandle.USER_CURRENT);
-        } else if (id ==  R.id.menu_item_qs_columns_eight) {
+                    Settings.System.QS_PANEL_BG_USE_NEW_TINT, 1, UserHandle.USER_CURRENT);
+            onQsTintChange(1);
+        } else if (id ==  R.id.menu_item_tint_oos) {
             Settings.System.putIntForUser(mContext.getContentResolver(),
-                    Settings.System.QS_QUICKBAR_COLUMNS, 8, UserHandle.USER_CURRENT);
-        } else if (id ==  R.id.menu_item_qs_columns_auto) {
-            Settings.System.putIntForUser(mContext.getContentResolver(),
-                    Settings.System.QS_QUICKBAR_COLUMNS, -1, UserHandle.USER_CURRENT);
+                    Settings.System.QS_PANEL_BG_USE_NEW_TINT, 2, UserHandle.USER_CURRENT);
+            onQsTintChange(2);
         }
 
         updateSettings();
         return false;
+    }
+
+    private void onQsTintChange(int newValue) {
+        mTileAdapter.onQsTintChange(newValue);
+        ((QSFragment) mQs).onQsTintChange(newValue);
     }
 
     private void reset() {
@@ -384,7 +377,7 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
                 Settings.System.OMNI_QS_LAYOUT_COLUMNS, mDefaultColumns,
                 UserHandle.USER_CURRENT);
         Settings.System.putIntForUser(mContext.getContentResolver(),
-                Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, mDefaultColumns,
+                Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, 6,
                 UserHandle.USER_CURRENT);
         updateSettings();
     }
@@ -489,15 +482,19 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
                 mContext.getContentResolver(), Settings.System.OMNI_QS_LAYOUT_COLUMNS, 3,
                 UserHandle.USER_CURRENT);
         int columnsLandscape = Settings.System.getIntForUser(
-                mContext.getContentResolver(), Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, 4,
+                mContext.getContentResolver(), Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, 6,
                 UserHandle.USER_CURRENT);
         int rows = Settings.System.getIntForUser(
                 mContext.getContentResolver(), Settings.System.QS_LAYOUT_ROWS, 3,
+                UserHandle.USER_CURRENT);
+        int tint = Settings.System.getIntForUser(
+                mContext.getContentResolver(), Settings.System.QS_PANEL_BG_USE_NEW_TINT, 0,
                 UserHandle.USER_CURRENT);
         mTileAdapter.setColumnCount(isPortrait ? columns : columnsLandscape);
         mLayout.setSpanCount(isPortrait ? columns : columnsLandscape);
         updateColumnsMenu(columns, columnsLandscape);
         updateRowsMenu(rows);
+        updateTintMenu(tint);
     }
 
     private void updateColumnsMenu(int columns, int columnsLandscape) {
@@ -509,33 +506,13 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
         menuItemFive.setChecked(columns == 5);
         MenuItem menuItemSix = mToolbar.getMenu().findItem(R.id.menu_item_columns_six);
         menuItemSix.setChecked(columns == 6);
-        MenuItem menuItemSeven = mToolbar.getMenu().findItem(R.id.menu_item_columns_seven);
-        menuItemSeven.setChecked(columns == 7);
-        MenuItem menuItemEight = mToolbar.getMenu().findItem(R.id.menu_item_columns_eight);
-        menuItemEight.setChecked(columns == 8);
 
         menuItemFour = mToolbar.getMenu().findItem(R.id.menu_item_columns_landscape_four);
         menuItemFour.setChecked(columnsLandscape == 4);
         menuItemFive = mToolbar.getMenu().findItem(R.id.menu_item_columns_landscape_five);
         menuItemFive.setChecked(columnsLandscape == 5);
-        MenuItem menuItemSix = mToolbar.getMenu().findItem(R.id.menu_item_columns_landscape_six);
+        menuItemSix = mToolbar.getMenu().findItem(R.id.menu_item_columns_landscape_six);
         menuItemSix.setChecked(columnsLandscape == 6);
-        menuItemSeven = mToolbar.getMenu().findItem(R.id.menu_item_columns_landscape_seven);
-        menuItemSeven.setChecked(columnsLandscape == 7);
-        menuItemEight = mToolbar.getMenu().findItem(R.id.menu_item_columns_landscape_eight);
-        menuItemEight.setChecked(columnsLandscape == 8);
-
-        int qsColumns = Settings.System.getIntForUser(
-                mContext.getContentResolver(), Settings.System.QS_QUICKBAR_COLUMNS,
-                QuickQSPanel.NUM_QUICK_TILES_DEFAULT, UserHandle.USER_CURRENT);
-        menuItemSix = mToolbar.getMenu().findItem(R.id.menu_item_qs_columns_six);
-        menuItemSix.setChecked(qsColumns == 6);
-        menuItemSeven = mToolbar.getMenu().findItem(R.id.menu_item_qs_columns_seven);
-        menuItemSeven.setChecked(qsColumns == 7);
-        menuItemEight = mToolbar.getMenu().findItem(R.id.menu_item_qs_columns_eight);
-        menuItemEight.setChecked(qsColumns == 8);
-        MenuItem menuItemAuto = mToolbar.getMenu().findItem(R.id.menu_item_qs_columns_auto);
-        menuItemAuto.setChecked(qsColumns == -1);
     }
 
     private void updateRowsMenu(int rows) {
@@ -543,5 +520,14 @@ public class QSCustomizer extends LinearLayout implements OnMenuItemClickListene
         menuItemTwo.setChecked(rows == 2);
         MenuItem menuItemThree = mToolbar.getMenu().findItem(R.id.menu_item_rows_three);
         menuItemThree.setChecked(rows == 3);
+    }
+
+    private void updateTintMenu(int tint) {
+        MenuItem menuItemDisabled = mToolbar.getMenu().findItem(R.id.menu_item_tint_disabled);
+        menuItemDisabled.setChecked(tint == 0);
+        MenuItem menuItemAccent = mToolbar.getMenu().findItem(R.id.menu_item_tint_accent);
+        menuItemAccent.setChecked(tint == 1);
+        MenuItem menuItemOOS = mToolbar.getMenu().findItem(R.id.menu_item_tint_oos);
+        menuItemOOS.setChecked(tint == 2);
     }
 }

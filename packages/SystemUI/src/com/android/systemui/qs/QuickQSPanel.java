@@ -22,8 +22,6 @@ import android.content.Context;
 import android.content.ContentResolver;
 import android.content.res.Configuration;
 import android.graphics.Rect;
-import android.os.UserHandle;
-import android.provider.Settings;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
@@ -297,14 +295,7 @@ public class QuickQSPanel extends QSPanel {
     }
 
     public void updateSettings() {
-        int qsColumns = Settings.System.getIntForUser(
-                mContext.getContentResolver(), Settings.System.QS_QUICKBAR_COLUMNS,
-                NUM_QUICK_TILES_DEFAULT, UserHandle.USER_CURRENT);
-        if (qsColumns == -1) {
-            setMaxTiles(Math.max(NUM_QUICK_TILES_DEFAULT, getNumColumns()));
-        } else {
-            setMaxTiles(Math.max(NUM_QUICK_TILES_DEFAULT, qsColumns));
-        }
+        setMaxTiles(Math.max(NUM_QUICK_TILES_DEFAULT, getNumColumns()));
         if (mFullPanel != null && mFullPanel.getMediaVisible()) {
             // if the user changed quick columns while media is playing
             // making sure we redistribute the tiles properly

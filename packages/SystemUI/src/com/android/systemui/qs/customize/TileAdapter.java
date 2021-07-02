@@ -159,6 +159,17 @@ public class TileAdapter extends RecyclerView.Adapter<Holder> implements TileSta
         recalcSpecs();
     }
 
+    public void onQsTintChange(int newValue) {
+        int childCount = mRecyclerView.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            final View child = mRecyclerView.getChildAt(i);
+            final Holder holder = (Holder) mRecyclerView.getChildViewHolder(child);
+            if (holder.mTileView == null) continue;
+            holder.mTileView.updateTintColor(newValue);
+        }
+        notifyDataSetChanged();
+    }
+
     @Override
     public void onTilesChanged(List<TileInfo> tiles) {
         mAllTiles = tiles;

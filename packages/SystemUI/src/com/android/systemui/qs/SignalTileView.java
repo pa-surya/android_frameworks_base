@@ -18,10 +18,13 @@ package com.android.systemui.qs;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import com.android.settingslib.Utils;
 import com.android.systemui.R;
 import com.android.systemui.plugins.qs.QSTile.SignalState;
 import com.android.systemui.plugins.qs.QSTile.State;
@@ -55,6 +58,10 @@ public class SignalTileView extends QSIconViewImpl {
                 R.dimen.wide_type_icon_start_padding_qs);
         mSignalIndicatorToIconFrameSpacing = context.getResources().getDimensionPixelSize(
                 R.dimen.signal_indicator_to_icon_frame_spacing);
+
+        int setQsUseNewTint = Settings.System.getIntForUser(context.getContentResolver(),
+                Settings.System.QS_PANEL_BG_USE_NEW_TINT, 0, UserHandle.USER_CURRENT);
+        updateActivityIndicators(setQsUseNewTint);
     }
 
     private ImageView addTrafficView(int icon) {
@@ -63,6 +70,23 @@ public class SignalTileView extends QSIconViewImpl {
         traffic.setAlpha(0f);
         addView(traffic);
         return traffic;
+    }
+
+    @Override
+    public void onQsTintChange(int newValue) {
+        super.onQsTintChange(newValue);
+        updateActivityIndicators(newValue);
+    }
+
+    private void updateActivityIndicators(int newValue) {
+        Context context = getContext();
+
+        int color = Utils.getColorAttrDefaultColor(context, android.R.attr.colorAccent);
+        if (newValue == 2) {
+            color = context.getResources().getColor(R.color.qs_tile_oos_background);
+        }
+        mIn.getDrawable().setTint(color);
+        mOut.getDrawable().setTint(color);
     }
 
     @Override

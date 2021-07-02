@@ -23,6 +23,7 @@ import static com.android.settingslib.display.BrightnessUtils.convertLinearToGam
 import android.animation.ValueAnimator;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.database.ContentObserver;
 import android.hardware.display.DisplayManager;
 import android.net.Uri;
@@ -47,6 +48,7 @@ import com.android.internal.BrightnessSynchronizer;
 import com.android.internal.logging.MetricsLogger;
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 import com.android.settingslib.RestrictedLockUtilsInternal;
+import com.android.settingslib.Utils;
 import com.android.systemui.Dependency;
 import com.android.systemui.broadcast.BroadcastDispatcher;
 import com.android.systemui.R;
@@ -347,6 +349,27 @@ public class BrightnessController implements ToggleSlider.Listener {
         mBrightnessRampRate = mContext.getResources().getFloat(
                 com.android.internal.R.dimen.config_brightnessRampRateFastFloat);
 
+        updateIcon(mAutomatic);
+    }
+
+    public void updateTintColor() {
+        int setQsUseNewTint = Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.QS_PANEL_BG_USE_NEW_TINT, 0, UserHandle.USER_CURRENT);
+        updateTintColor(setQsUseNewTint);
+    }
+
+    public void updateTintColor(int newValue) {
+        int color = Utils.getColorAttrDefaultColor(mContext, android.R.attr.colorAccent);
+        if (newValue == 2) {
+            color = mContext.getResources().getColor(R.color.qs_tile_oos_background);
+        }
+        mIcon.setImageTintList(ColorStateList.valueOf(color));
+        mLevelIcon.setImageTintList(ColorStateList.valueOf(color));
+        if (mMirrorIcon != null) {
+            mMirrorIcon.setImageTintList(ColorStateList.valueOf(color));
+            mMirrorLevelIcon.setImageTintList(ColorStateList.valueOf(color));
+        }
+        mControl.updateTint(color);
         updateIcon(mAutomatic);
     }
 
