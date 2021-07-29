@@ -92,8 +92,8 @@ public final class CachedAppOptimizer {
     private static final String COMPACT_ACTION_FULL = "all";
 
     // Defaults for phenotype flags.
-    @VisibleForTesting static Boolean DEFAULT_USE_COMPACTION = false;
-    @VisibleForTesting static final Boolean DEFAULT_USE_FREEZER = false;
+    @VisibleForTesting static Boolean DEFAULT_USE_COMPACTION = true;
+    @VisibleForTesting static final Boolean DEFAULT_USE_FREEZER = true;
     @VisibleForTesting static final int DEFAULT_COMPACT_ACTION_1 = COMPACT_ACTION_FILE_FLAG;
     @VisibleForTesting static final int DEFAULT_COMPACT_ACTION_2 = COMPACT_ACTION_FULL_FLAG;
     @VisibleForTesting static final long DEFAULT_COMPACT_THROTTLE_1 = 5_000;
