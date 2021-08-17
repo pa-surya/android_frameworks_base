@@ -38,7 +38,6 @@ public class TileLayout extends ViewGroup implements QSTileLayout {
     protected int mMaxAllowedRows = 3;
 
     // Prototyping with less rows
-    private final boolean mLessRows;
     private int mMinRows = 1;
     private int mMaxColumns = NO_MAX_COLUMNS;
     private int mResourceColumns;
@@ -50,7 +49,6 @@ public class TileLayout extends ViewGroup implements QSTileLayout {
     public TileLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         setFocusableInTouchMode(true);
-        mLessRows = (Settings.System.getInt(context.getContentResolver(), "qs_less_rows", 0) != 0);
         updateResources();
 
     }
@@ -117,7 +115,6 @@ public class TileLayout extends ViewGroup implements QSTileLayout {
         mCellMarginVertical= res.getDimensionPixelSize(R.dimen.qs_tile_margin_vertical);
         mCellMarginTop = res.getDimensionPixelSize(R.dimen.qs_tile_margin_top);
         mMaxAllowedRows = Math.max(1, getResources().getInteger(R.integer.quick_settings_max_rows));
-        if (mLessRows) mMaxAllowedRows = Math.max(mMinRows, mMaxAllowedRows - 1);
         updateSettings();
         return false;
     }
@@ -250,9 +247,13 @@ public class TileLayout extends ViewGroup implements QSTileLayout {
         int columnsLandscape = Settings.System.getIntForUser(
                 mContext.getContentResolver(), Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, 6,
                 UserHandle.USER_CURRENT);
+        int maxRows = Settings.System.getIntForUser(
+                mContext.getContentResolver(), Settings.System.QS_LAYOUT_ROWS, 3,
+                UserHandle.USER_CURRENT);
         columns = (isPortrait ? columns : columnsLandscape);
-        if (mColumns != columns) {
+        if (mColumns != columns || mMaxAllowedRows != maxRows) {
             mColumns = Math.min(columns, mMaxColumns);
+            mMaxAllowedRows = Math.max(1, maxRows);
             requestLayout();
         }
     }
