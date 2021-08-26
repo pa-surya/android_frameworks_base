@@ -86,8 +86,5 @@ public class SystemSettings {
         Settings.System.AMBIENT_NOTIFICATION_LIGHT,
         Settings.System.AMBIENT_NOTIFICATION_LIGHT_AUTOMATIC,
         Settings.System.NOTIFICATION_LIGHT_PULSE,
-        Settings.System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE,
-        Settings.System.OMNI_QS_LAYOUT_COLUMNS,
-        Settings.System.QS_LAYOUT_ROWS,
     };
 }

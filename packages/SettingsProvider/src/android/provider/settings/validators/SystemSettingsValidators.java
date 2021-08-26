@@ -213,8 +213,5 @@ public class SystemSettingsValidators {
         VALIDATORS.put(System.NOTIFICATION_LIGHT_PULSE, BOOLEAN_VALIDATOR);
         VALIDATORS.put(System.CALL_CONNECTED_TONE_ENABLED, BOOLEAN_VALIDATOR);
         VALIDATORS.put(System.FORCE_FULLSCREEN_CUTOUT_APPS, ANY_STRING_VALIDATOR);
-        VALIDATORS.put(System.OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE, new InclusiveIntegerRangeValidator(4, 6));
-        VALIDATORS.put(System.OMNI_QS_LAYOUT_COLUMNS, new InclusiveIntegerRangeValidator(3, 6));
-        VALIDATORS.put(System.QS_LAYOUT_ROWS, new InclusiveIntegerRangeValidator(2, 3));
     }
 }

@@ -5030,35 +5030,6 @@ public final class Settings {
          */
         public static final String RINGTONE_VIBRATION_PATTERN = "ringtone_vibration_pattern";
 
-         /**
-         * Number of qs columns on landscape orientation
-         * @hide
-         */
-        public static final String OMNI_QS_LAYOUT_COLUMNS_LANDSCAPE = "qs_layout_columns_landscape";
-
-         /**
-         * @hide
-         */
-        public static final String OMNI_QS_LAYOUT_COLUMNS = "qs_layout_columns";
-
-        /**
-         * Number of maximum qs rows to show
-         * @hide
-         */
-        public static final String QS_LAYOUT_ROWS = "qs_layout_rows";
-
-        /**
-         * Number of qs columns on quickbar
-         * @hide
-         */
-        public static final String QS_QUICKBAR_COLUMNS = "qs_quickbar_columns";
-
-        /**
-         * Whether to use new QS panel bg tint or not
-         * @hide
-         */
-        public static final String QS_PANEL_BG_USE_NEW_TINT = "qs_panel_bg_use_new_tint";
-
         /**
          * Force full screen for devices with cutout
          * @hide
@@ -5192,6 +5163,7 @@ public final class Settings {
             PRIVATE_SETTINGS.add(GESTURE_SINGLE_TAP);
             PRIVATE_SETTINGS.add(GESTURE_DRAW_V);
             PRIVATE_SETTINGS.add(GESTURE_DRAW_INVERSE_V);
+            PRIVATE_SETTINGS.add(GESTURE_DRAW_O);
             PRIVATE_SETTINGS.add(GESTURE_DRAW_M);
             PRIVATE_SETTINGS.add(GESTURE_DRAW_W);
             PRIVATE_SETTINGS.add(GESTURE_DRAW_S);
@@ -5202,7 +5174,6 @@ public final class Settings {
             PRIVATE_SETTINGS.add(GESTURE_ONE_FINGER_SWIPE_DOWN);
             PRIVATE_SETTINGS.add(GESTURE_ONE_FINGER_SWIPE_LEFT);
             PRIVATE_SETTINGS.add(FORCE_FULLSCREEN_CUTOUT_APPS);
-            PRIVATE_SETTINGS.add(QS_PANEL_BG_USE_NEW_TINT);
         }
 
         /**

@@ -32,5 +32,4 @@ public abstract class QSIconView extends ViewGroup {
     public abstract void setIcon(State state, boolean allowAnimations);
     public abstract void disableAnimation();
     public abstract View getIconView();
-    public abstract void onQsTintChange(int newValue);
 }

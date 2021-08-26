@@ -73,7 +73,6 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
     private QSCustomizer mQSCustomizer;
     protected QSPanel mQSPanel;
     protected NonInterceptingScrollView mQSPanelScrollView;
-    protected QuickQSPanel mQuickQSPanel;
     private QSDetail mQSDetail;
     private boolean mListening;
     private QSContainerImpl mContainer;
@@ -140,7 +139,6 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
         mQSDetail = view.findViewById(R.id.qs_detail);
         mHeader = view.findViewById(R.id.header);
         mQSPanel.setHeaderContainer(view.findViewById(R.id.header_text_container));
-        mQuickQSPanel = mHeader.findViewById(R.id.quick_qs_panel);
         mFooter = view.findViewById(R.id.qs_footer);
         mPAFooter = mQSPanel.findViewById(R.id.pa_qs_footer);
         mContainer = view.findViewById(id.quick_settings_container);
@@ -151,7 +149,7 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
 
 
         mQSDetail.setQsPanel(mQSPanel, mHeader, (View) mFooter);
-        mQSAnimator = new QSAnimator(this, mQuickQSPanel, mQSPanel, getContext());
+        mQSAnimator = new QSAnimator(this, mHeader.findViewById(R.id.quick_qs_panel), mQSPanel, getContext());
 
         mQSCustomizer = view.findViewById(R.id.qs_customize);
         mQSCustomizer.setQs(this);
@@ -235,14 +233,6 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
                 mQSAnimator.onRtlChanged();
             }
         }
-        if (mQSAnimator != null) {
-            mQSAnimator.updateSettings();
-        }
-    }
-
-    public void onQsTintChange(int newValue) {
-        mQSPanel.onQsTintChange(newValue);
-        mQuickQSPanel.onQsTintChange(newValue);
     }
 
     private void setEditLocation(View view) {
@@ -268,7 +258,7 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
     public void setHost(QSTileHost qsh) {
         mQSPanel.setHost(qsh, mQSCustomizer);
         mHeader.setQSPanel(mQSPanel);
-        mFooter.setQSPanel(mQSPanel, mQuickQSPanel);
+        mFooter.setQSPanel(mQSPanel);
         mQSDetail.setHost(qsh);
 
         if (mQSAnimator != null) {
@@ -384,7 +374,7 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
     public void setListening(boolean listening) {
         if (DEBUG) Log.d(TAG, "setListening " + listening);
         if (mListening != listening) {
-            mQuickQSPanel.setBrightnessSliderVisible(listening);
+            mHeader.getHeaderQsPanel().setBrightnessSliderVisible(listening);
         }
         mListening = listening;
         mQSContainerImplController.setListening(listening);
@@ -397,7 +387,7 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
     public void setHeaderListening(boolean listening) {
         // Start brightness listening as soon as the header starts listening,
         // so it will update the current brightness before the slider is visible.
-        mQuickQSPanel.setBrightnessListening(listening);
+        mHeader.getHeaderQsPanel().setBrightnessListening(listening);
         mQSPanel.setBrightnessListening(listening);
         mHeader.setListening(listening);
         mFooter.setListening(listening);
@@ -418,7 +408,7 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
         int currentHeight = getView().getHeight();
         if (mLastHeaderTranslation != headerTranslation || mLastQSExpansion != expansion) {
             mQSPanel.notifyExpansion();
-            mQuickQSPanel.notifyExpansion();
+            mHeader.getHeaderQsPanel().notifyExpansion();
         }
         mLastHeaderTranslation = headerTranslation;
         if (expansion == mLastQSExpansion && mLastKeyguardAndExpanded == onKeyguardAndExpanded
@@ -468,7 +458,7 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
 
     private void updateBrightnessSliderVisibility(boolean fullyCollapsed) {
         mQSPanel.setBrightnessSliderVisible(!fullyCollapsed);
-        mQuickQSPanel.setBrightnessSliderVisible(fullyCollapsed);
+        mHeader.getHeaderQsPanel().setBrightnessSliderVisible(fullyCollapsed);
     }
 
     private void updateQsBounds() {
@@ -590,13 +580,6 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
         // Let the panel know the position changed and it needs to update where notifications
         // and whatnot are.
         mPanelView.onQsHeightChanged();
-
-        // when we come back from customize update
-        if (!mQSCustomizer.isCustomizing()) {
-            mQSPanel.updateSettings();
-            mQuickQSPanel.updateSettings();
-            mQSAnimator.updateSettings();
-        }
     }
 
     /**
@@ -658,10 +641,6 @@ public class QSFragment extends LifecycleFragment implements QS, CommandQueue.Ca
             updateQsState();
         }
     };
-
-    public QuickQSPanel getQuickQsPanel() {
-        return mQuickQSPanel;
-    }
 
     @Override
     public void onStateChanged(int newState) {

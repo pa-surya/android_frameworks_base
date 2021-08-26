@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.drawable.AnimatedVectorDrawable;
-import android.os.UserHandle;
-import android.provider.Settings;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -36,7 +34,6 @@ public class PageIndicator extends ViewGroup {
 
     private int mPosition = -1;
     private boolean mAnimating;
-    private int mQsTint;
 
     public PageIndicator(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -45,12 +42,13 @@ public class PageIndicator extends ViewGroup {
         mPageIndicatorHeight =
                 (int) mContext.getResources().getDimension(R.dimen.qs_page_indicator_height);
         mPageDotWidth = (int) (mPageIndicatorWidth * SINGLE_SCALE);
-        mQsTint = Settings.System.getIntForUser(mContext.getContentResolver(),
-                Settings.System.QS_PANEL_BG_USE_NEW_TINT, 0, UserHandle.USER_CURRENT);
     }
 
     public void setNumPages(int numPages) {
-        int color = getColor(mQsTint);
+        TypedArray array = getContext().obtainStyledAttributes(
+                new int[]{android.R.attr.colorControlActivated});
+        int color = array.getColor(0, 0);
+        array.recycle();
         setNumPages(numPages, color);
     }
 
@@ -74,29 +72,6 @@ public class PageIndicator extends ViewGroup {
         }
         // Refresh state.
         setIndex(mPosition >> 1);
-    }
-
-    public void updateTintColor(int newValue) {
-        mQsTint = newValue;
-        int num = getChildCount();
-        int color = getColor(newValue);
-        for(int i = 0; i < num; i++) {
-            ImageView v = (ImageView) getChildAt(i);
-            v.setImageTintList(ColorStateList.valueOf(color));
-        }
-    }
-
-    private int getColor(int newValue) {
-        int color;
-        if (newValue == 2) {
-            color = mContext.getResources().getColor(R.color.qs_tile_oos_background);
-        } else {
-            TypedArray array = getContext().obtainStyledAttributes(
-                    new int[]{android.R.attr.colorControlActivated});
-            color = array.getColor(0, 0);
-            array.recycle();
-        }
-        return color;
     }
 
     public void setLocation(float location) {

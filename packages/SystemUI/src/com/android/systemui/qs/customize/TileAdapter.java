@@ -159,17 +159,6 @@ public class TileAdapter extends RecyclerView.Adapter<Holder> implements TileSta
         recalcSpecs();
     }
 
-    public void onQsTintChange(int newValue) {
-        int childCount = mRecyclerView.getChildCount();
-        for (int i = 0; i < childCount; i++) {
-            final View child = mRecyclerView.getChildAt(i);
-            final Holder holder = (Holder) mRecyclerView.getChildViewHolder(child);
-            if (holder.mTileView == null) continue;
-            holder.mTileView.updateTintColor(newValue);
-        }
-        notifyDataSetChanged();
-    }
-
     @Override
     public void onTilesChanged(List<TileInfo> tiles) {
         mAllTiles = tiles;
@@ -610,18 +599,13 @@ public class TileAdapter extends RecyclerView.Adapter<Holder> implements TileSta
         }
     }
 
-    private class OmniSpanSizeLookup extends SpanSizeLookup {
-        private int mColumns = 3;
+    private final SpanSizeLookup mSizeLookup = new SpanSizeLookup() {
         @Override
         public int getSpanSize(int position) {
             final int type = getItemViewType(position);
-            return type == TYPE_EDIT || type == TYPE_DIVIDER || type == TYPE_HEADER ? mColumns : 1;
+            return type == TYPE_EDIT || type == TYPE_DIVIDER || type == TYPE_HEADER ? 3 : 1;
         }
-        public void setColumnCount(int columns) {
-            mColumns = columns;
-        }
-    }
-    private final OmniSpanSizeLookup mSizeLookup = new OmniSpanSizeLookup();
+    };
 
     private class TileItemDecoration extends ItemDecoration {
         private final Drawable mDrawable;
@@ -741,8 +725,4 @@ public class TileAdapter extends RecyclerView.Adapter<Holder> implements TileSta
         public void onSwiped(ViewHolder viewHolder, int direction) {
         }
     };
-
-    public void setColumnCount(int columns) {
-        mSizeLookup.setColumnCount(columns);
-    }
 }
