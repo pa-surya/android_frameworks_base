@@ -18,8 +18,15 @@ package com.android.systemui.qs;
 
 import static com.android.systemui.qs.dagger.QSFragmentModule.QS_FOOTER;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkScoreManager;
+import android.net.wifi.WifiManager;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
@@ -29,6 +36,8 @@ import com.android.systemui.R;
 import com.android.systemui.qs.dagger.QSScope;
 import com.android.systemui.settings.UserTracker;
 import com.android.systemui.util.ViewController;
+
+import com.android.settingslib.wifi.WifiStatusTracker;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,23 +52,36 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
     private final QSPanelController mQsPanelController;
     private final QuickQSPanelController mQuickQSPanelController;
     private final FooterActionsController mFooterActionsController;
-    private final TextView mBuildText;
     private final PageIndicator mPageIndicator;
+    private final WifiStatusTracker mWifiTracker;
+    private final Context mContext;
+
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            mWifiTracker.handleBroadcast(intent);
+            onWifiStatusUpdated();
+        }
+    };
 
     @Inject
     QSFooterViewController(QSFooterView view,
             UserTracker userTracker,
             QSPanelController qsPanelController,
             QuickQSPanelController quickQSPanelController,
-            @Named(QS_FOOTER) FooterActionsController footerActionsController) {
+            @Named(QS_FOOTER) FooterActionsController footerActionsController,
+            Context context) {
         super(view);
         mUserTracker = userTracker;
         mQsPanelController = qsPanelController;
         mQuickQSPanelController = quickQSPanelController;
         mFooterActionsController = footerActionsController;
-
-        mBuildText = mView.findViewById(R.id.build);
+        mContext = context;
         mPageIndicator = mView.findViewById(R.id.footer_page_indicator);
+        mWifiTracker = new WifiStatusTracker(context, context.getSystemService(WifiManager.class),
+                context.getSystemService(NetworkScoreManager.class),
+                context.getSystemService(ConnectivityManager.class),
+                        this::onWifiStatusUpdated);
     }
 
     @Override
@@ -78,26 +100,24 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
                 }
         );
 
-        mBuildText.setOnLongClickListener(view -> {
-            CharSequence buildText = mBuildText.getText();
-            if (!TextUtils.isEmpty(buildText)) {
-                ClipboardManager service =
-                        mUserTracker.getUserContext().getSystemService(ClipboardManager.class);
-                String label = getResources().getString(R.string.build_number_clip_data_label);
-                service.setPrimaryClip(ClipData.newPlainText(label, buildText));
-                Toast.makeText(getContext(), R.string.build_number_copy_toast, Toast.LENGTH_SHORT)
-                        .show();
-                return true;
-            }
-            return false;
-        });
         mQsPanelController.setFooterPageIndicator(mPageIndicator);
+
+        final IntentFilter filter = new IntentFilter();
+        filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+        filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+        filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
+        mContext.registerReceiver(mReceiver, filter);
+        mWifiTracker.fetchInitialState();
+        mWifiTracker.setListening(true);
+        onWifiStatusUpdated();
+
         mView.updateEverything();
     }
 
     @Override
     protected void onViewDetached() {
         setListening(false);
+        mContext.unregisterReceiver(mReceiver);
     }
 
     @Override
@@ -138,5 +158,10 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
     public void disable(int state1, int state2, boolean animate) {
         mView.disable(state2);
         mFooterActionsController.disable(state2);
+    }
+
+    private void onWifiStatusUpdated() {
+        mView.setIsWifiConnected(mWifiTracker.connected);
+        mView.setWifiSsid(mWifiTracker.ssid);
     }
 }
