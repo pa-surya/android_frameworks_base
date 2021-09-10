@@ -69,7 +69,6 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
     private final MultiUserSwitchController mMultiUserSwitchController;
     private final SettingsButton mSettingsButton;
     private final View mSettingsButtonContainer;
-    private final TextView mBuildText;
     private final View mEdit;
     private final PageIndicator mPageIndicator;
     private final View mPowerMenuLite;
@@ -159,7 +158,6 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
 
         mSettingsButton = mView.findViewById(R.id.settings_button);
         mSettingsButtonContainer = mView.findViewById(R.id.settings_button_container);
-        mBuildText = mView.findViewById(R.id.build);
         mEdit = mView.findViewById(android.R.id.edit);
         mPageIndicator = mView.findViewById(R.id.footer_page_indicator);
         mPowerMenuLite = mView.findViewById(R.id.pm_lite);
@@ -187,19 +185,6 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
                         mView.updateAnimator(
                                 right - left, mQuickQSPanelController.getNumQuickTiles()));
         mSettingsButton.setOnClickListener(mSettingsOnClickListener);
-        mBuildText.setOnLongClickListener(view -> {
-            CharSequence buildText = mBuildText.getText();
-            if (!TextUtils.isEmpty(buildText)) {
-                ClipboardManager service =
-                        mUserTracker.getUserContext().getSystemService(ClipboardManager.class);
-                String label = getResources().getString(R.string.build_number_clip_data_label);
-                service.setPrimaryClip(ClipData.newPlainText(label, buildText));
-                Toast.makeText(getContext(), R.string.build_number_copy_toast, Toast.LENGTH_SHORT)
-                        .show();
-                return true;
-            }
-            return false;
-        });
 
         mEdit.setOnClickListener(view -> {
             if (mFalsingManager.isFalseTap(FalsingManager.LOW_PENALTY)) {
