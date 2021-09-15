@@ -32,6 +32,8 @@ import android.net.INetworkStatsSession;
 import android.net.NetworkPolicy;
 import android.net.NetworkPolicyManager;
 import android.net.NetworkTemplate;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.telephony.SubscriptionManager;
@@ -61,6 +63,7 @@ public class DataUsageController {
     private final INetworkStatsService mStatsService;
     private final NetworkPolicyManager mPolicyManager;
     private final NetworkStatsManager mNetworkStatsManager;
+    private final WifiManager mWifiManager;
 
     private INetworkStatsSession mSession;
     private Callback mCallback;
@@ -73,6 +76,7 @@ public class DataUsageController {
                 ServiceManager.getService(Context.NETWORK_STATS_SERVICE));
         mPolicyManager = NetworkPolicyManager.from(mContext);
         mNetworkStatsManager = context.getSystemService(NetworkStatsManager.class);
+        mWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         mSubscriptionId = SubscriptionManager.INVALID_SUBSCRIPTION_ID;
     }
 
@@ -119,9 +123,19 @@ public class DataUsageController {
     }
 
     public DataUsageInfo getWifiDataUsageInfo() {
-        NetworkTemplate template = NetworkTemplate.buildTemplateWifi(
-                NetworkTemplate.WIFI_NETWORKID_ALL, null);
-        return getDataUsageInfo(template);
+        return getDataUsageInfo(getWifiNetworkTemplate());
+    }
+
+    public DataUsageInfo getWifiDailyDataUsageInfo() {
+        return getDailyDataUsageInfo(getWifiNetworkTemplate());
+    }
+
+    public NetworkTemplate getWifiNetworkTemplate() {
+        final WifiInfo wifiInfo = mWifiManager.getConnectionInfo();
+        if (wifiInfo.getHiddenSSID() || wifiInfo.getSSID().equals(WifiManager.UNKNOWN_SSID)) {
+            return NetworkTemplate.buildTemplateWifiWildcard();
+        }
+        return NetworkTemplate.buildTemplateWifi(wifiInfo.getSSID());
     }
 
     public DataUsageInfo getDataUsageInfo(NetworkTemplate template) {

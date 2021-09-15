@@ -24,13 +24,19 @@ import android.database.ContentObserver;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.provider.Settings;
+import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.text.BidiFormatter;
 import android.text.format.Formatter;
@@ -53,6 +59,8 @@ import com.android.systemui.R;
 import com.android.systemui.qs.TouchAnimator.Builder;
 import com.android.systemui.statusbar.phone.MultiUserSwitch;
 import com.android.systemui.statusbar.phone.SettingsButton;
+
+import java.util.List;
 
 /** */
 public class QSFooterView extends FrameLayout {
@@ -82,8 +90,17 @@ public class QSFooterView extends FrameLayout {
 
     private OnClickListener mExpandClickListener;
 
+    private DataUsageController mDataController;
+    private ConnectivityManager mConnectivityManager;
+    private WifiManager mWifiManager;
+    private SubscriptionManager mSubManager;
+
     public QSFooterView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mDataController = new DataUsageController(context);
+        mConnectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        mWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        mSubManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
     }
 
     @Override
@@ -116,12 +133,20 @@ public class QSFooterView extends FrameLayout {
 
     private void setUsageText() {
         if (mUsageText == null) return;
-        DataUsageController mobileDataController = new DataUsageController(mContext);
-        mobileDataController.setSubscriptionId(
-                SubscriptionManager.getDefaultDataSubscriptionId());
-        final DataUsageController.DataUsageInfo info = mobileDataController.getDailyDataUsageInfo();
+        DataUsageController.DataUsageInfo info;
+        String suffix;
+        if (isWifiConnected()) {
+            info = mDataController.getWifiDailyDataUsageInfo();
+            suffix = getWifiSsid();
+        } else {
+            mDataController.setSubscriptionId(
+                    SubscriptionManager.getDefaultDataSubscriptionId());
+            info = mDataController.getDailyDataUsageInfo();
+            suffix = getSlotCarrierName();
+        }
         mUsageText.setText(formatDataUsage(info.usageLevel) + " " +
-                mContext.getResources().getString(R.string.usage_data));
+                mContext.getResources().getString(R.string.usage_data) +
+                " (" + suffix + ")");
     }
 
     private CharSequence formatDataUsage(long byteValue) {
@@ -129,6 +154,42 @@ public class QSFooterView extends FrameLayout {
                 Formatter.FLAG_IEC_UNITS);
         return BidiFormatter.getInstance().unicodeWrap(mContext.getString(
                 com.android.internal.R.string.fileSizeSuffix, res.value, res.units));
+    }
+
+    private boolean isWifiConnected() {
+        final Network network = mConnectivityManager.getActiveNetwork();
+        if (network != null) {
+            NetworkCapabilities capabilities = mConnectivityManager.getNetworkCapabilities(network);
+            return capabilities != null &&
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+        } else {
+            return false;
+        }
+    }
+
+    private String getSlotCarrierName() {
+        CharSequence result = mContext.getResources().getString(R.string.usage_data_default_suffix);
+        int subId = mSubManager.getDefaultDataSubscriptionId();
+        final List<SubscriptionInfo> subInfoList =
+                mSubManager.getActiveSubscriptionInfoList(true);
+        if (subInfoList != null) {
+            for (SubscriptionInfo subInfo : subInfoList) {
+                if (subId == subInfo.getSubscriptionId()) {
+                    result = subInfo.getDisplayName();
+                    break;
+                }
+            }
+        }
+        return result.toString();
+    }
+
+    private String getWifiSsid() {
+        final WifiInfo wifiInfo = mWifiManager.getConnectionInfo();
+        if (wifiInfo.getHiddenSSID() || wifiInfo.getSSID() == WifiManager.UNKNOWN_SSID) {
+            return mContext.getResources().getString(R.string.usage_wifi_default_suffix);
+        } else {
+            return wifiInfo.getSSID().replace("\"", "");
+        }
     }
 
     void updateAnimator(int width, int numTiles) {
@@ -204,6 +265,18 @@ public class QSFooterView extends FrameLayout {
 
         if (mFooterAnimator != null) {
             mFooterAnimator.setPosition(headerExpansionFraction);
+        }
+
+        if (mUsageText == null) return;
+        if (headerExpansionFraction == 1.0f) {
+            mUsageText.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mUsageText.setSelected(true);
+                }
+            }, 1000);
+        } else {
+            mUsageText.setSelected(false);
         }
     }
 
