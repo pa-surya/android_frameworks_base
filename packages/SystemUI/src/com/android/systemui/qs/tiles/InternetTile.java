@@ -67,6 +67,7 @@ import com.android.systemui.statusbar.connectivity.NetworkController;
 import com.android.systemui.statusbar.connectivity.SignalCallback;
 import com.android.systemui.statusbar.connectivity.WifiIcons;
 import com.android.systemui.statusbar.connectivity.WifiIndicators;
+import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.util.CarrierNameCustomization;
 
 import java.io.PrintWriter;
@@ -74,7 +75,7 @@ import java.io.PrintWriter;
 import javax.inject.Inject;
 
 /** Quick settings tile: Internet **/
-public class InternetTile extends QSTileImpl<SignalState> {
+public class InternetTile extends SecureQSTile<SignalState> {
 
     public static final String TILE_SPEC = "internet";
 
@@ -108,10 +109,11 @@ public class InternetTile extends QSTileImpl<SignalState> {
             NetworkController networkController,
             AccessPointController accessPointController,
             InternetDialogFactory internetDialogFactory,
-            CarrierNameCustomization carrierNameCustomization
+            CarrierNameCustomization carrierNameCustomization,
+            KeyguardStateController keyguardStateController
     ) {
         super(host, backgroundLooper, mainHandler, falsingManager, metricsLogger,
-                statusBarStateController, activityStarter, qsLogger);
+                statusBarStateController, activityStarter, qsLogger, keyguardStateController);
         mInternetDialogFactory = internetDialogFactory;
         mHandler = mainHandler;
         mController = networkController;
@@ -139,7 +141,10 @@ public class InternetTile extends QSTileImpl<SignalState> {
     }
 
     @Override
-    protected void handleClick(@Nullable View view) {
+    protected void handleClick(@Nullable View view, boolean keyguardShowing) {
+        if (checkKeyguard(view, keyguardShowing)) {
+            return;
+        }
         mHandler.post(() -> mInternetDialogFactory.create(true,
                 mAccessPointController.canConfigMobileData(),
                 mAccessPointController.canConfigWifi(), view));
