@@ -43,6 +43,9 @@ public class PixelPropsUtils {
     private static final String[] extraPackagesToChange = {
         "com.android.chrome",
         "com.android.vending",
+        "com.chrome.beta",
+        "com.chrome.canary",
+        "com.chrome.dev",
         PACKAGE_NETFLIX
     };
     private static final String[] packagesToChangeP5 = {
