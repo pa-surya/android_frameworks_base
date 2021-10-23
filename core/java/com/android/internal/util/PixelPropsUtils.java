@@ -42,6 +42,9 @@ public class PixelPropsUtils {
     private static final Map<String, ArrayList<String>> propsToKeep;
     private static final String[] extraPackagesToChange = {
         "com.android.chrome",
+        "com.chrome.beta",
+        "com.chrome.canary",
+        "com.chrome.dev",
         PACKAGE_NETFLIX
     };
     private static final String[] packagesToChangeP5 = {
