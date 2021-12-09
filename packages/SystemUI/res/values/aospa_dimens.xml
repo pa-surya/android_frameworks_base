@@ -47,4 +47,9 @@
     <!-- StatusBar burn-in protection -->
     <dimen name="horizontal_max_shift">3.0dp</dimen>
     <dimen name="vertical_max_shift">2.0dp</dimen>
+
+    <!-- Navbar lenght -->
+    <dimen name="navigation_home_handle_width_medium">110dp</dimen>
+    <dimen name="navigation_home_handle_width_long">140dp</dimen>
+
 </resources>
