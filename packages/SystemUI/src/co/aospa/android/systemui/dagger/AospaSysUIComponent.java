@@ -8,6 +8,7 @@ import com.android.systemui.dagger.SysUIComponent;
 import com.android.systemui.dagger.SystemUIModule;
 
 import co.aospa.android.systemui.columbus.ColumbusModule;
+import co.aospa.android.systemui.elmyra.ElmyraModule;
 import co.aospa.android.systemui.keyguard.AospaKeyguardSliceProvider;
 import co.aospa.android.systemui.smartspace.KeyguardSmartspaceController;
 
@@ -18,6 +19,7 @@ import dagger.Subcomponent;
         ColumbusModule.class,
         DefaultComponentBinder.class,
         DependencyProvider.class,
+        ElmyraModule.class,
         AospaSystemUIBinder.class,
         SystemUIModule.class,
         AospaSystemUIModule.class})
