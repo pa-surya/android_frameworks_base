@@ -655,7 +655,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
         CurrentUserProvider currentUser = new CurrentUserProvider();
 
         // make sure emergency affordance action is first, if needed
-        if (mEmergencyAffordanceManager.needsEmergencyAffordance()) {
+        if (mEmergencyAffordanceManager.needsEmergencyAffordance() && !mRebootMenu) {
             addIfShouldShowAction(tempActions, new EmergencyAffordanceAction());
             addedKeys.add(GLOBAL_ACTION_KEY_EMERGENCY);
         }
@@ -710,7 +710,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                         && currentUser.get().id != UserHandle.USER_SYSTEM) {
                     addIfShouldShowAction(tempActions, new LogoutAction());
                 }
-            } else if (GLOBAL_ACTION_KEY_EMERGENCY.equals(actionKey)) {
+            } else if (GLOBAL_ACTION_KEY_EMERGENCY.equals(actionKey) && !mRebootMenu) {
                 addIfShouldShowAction(tempActions, new EmergencyDialerAction());
             } else {
                 Log.e(TAG, "Invalid global action key " + actionKey);
