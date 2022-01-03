@@ -1938,7 +1938,7 @@ public class NotificationPanelViewController extends PanelViewController {
 
         final float w = mView.getMeasuredWidth();
         final float x = event.getX();
-        float region = w * 1.f / 4.f; // TODO overlay region fraction?
+        float region = w * 1.f / 3.f; // TODO overlay region fraction?
         boolean showQsOverride = false;
 
         if (mOneFingerQuickSettingsIntercept) {
