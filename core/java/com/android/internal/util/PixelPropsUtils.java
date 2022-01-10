@@ -102,9 +102,6 @@ public class PixelPropsUtils {
         if (packageName == null){
             return;
         }
-        if (packageName.equals(PACKAGE_GMS)) {
-            sIsGms = true;
-        }
         if (packageName.equals(PACKAGE_NETFLIX) && !SystemProperties.getBoolean(
                 "persist.pixelpropsutils.spoof_netflix", true)) {
             if (DEBUG) Log.d(TAG, "Netflix spoofing disabled by system prop");
@@ -129,6 +126,9 @@ public class PixelPropsUtils {
                 }
                 if (DEBUG) Log.d(TAG, "Defining " + key + " prop for: " + packageName);
                 setPropValue(key, value);
+            }
+            if (packageName.equals(PACKAGE_GMS)) {
+                sIsGms = true;
             }
         }
     }
