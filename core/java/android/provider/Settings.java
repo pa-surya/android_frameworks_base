@@ -5826,6 +5826,12 @@ public final class Settings {
         public static final String VOLUME_SEPARATE_NOTIFICATION = "volume_separate_notification";
 
         /**
+         * Whether to show the ripple animation on fingerprint unlock
+         * @hide
+         */
+        public static final String AUTH_RIPPLE_ENABLED = "auth_ripple_enabled";
+
+        /**
          * Keys we no longer back up under the current schema, but want to continue to
          * process when restoring historical backup datasets.
          *
