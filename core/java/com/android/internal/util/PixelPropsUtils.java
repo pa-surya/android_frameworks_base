@@ -39,6 +39,7 @@ public class PixelPropsUtils {
     private static final Map<String, ArrayList<String>> propsToKeep;
     private static final String[] extraPackagesToChange = {
         "com.android.chrome"
+        "com.netflix.mediaclient"
     };
     private static final String[] packagesToChangeP1 = {
          "com.google.android.apps.photos"
