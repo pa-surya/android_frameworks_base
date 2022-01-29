@@ -17,6 +17,7 @@
 package com.android.internal.util;
 
 import android.os.Build;
+import android.os.SystemProperties;
 import android.util.Log;
 
 import java.util.Arrays;
@@ -32,14 +33,15 @@ public class PixelPropsUtils {
 
     private static volatile boolean sIsGms = false;
     public static final String PACKAGE_GMS = "com.google.android.gms";
+    public static final String PACKAGE_NETFLIX = "com.netflix.mediaclient";
 
     private static final Map<String, Object> propsToChange;
     private static final Map<String, Object> propsToChangeP5;
     private static final Map<String, Object> propsToChangeP1;
     private static final Map<String, ArrayList<String>> propsToKeep;
     private static final String[] extraPackagesToChange = {
-        "com.android.chrome"
-        "com.netflix.mediaclient"
+        "com.android.chrome",
+        PACKAGE_NETFLIX
     };
     private static final String[] packagesToChangeP1 = {
          "com.google.android.apps.photos"
@@ -82,6 +84,11 @@ public class PixelPropsUtils {
         }
         if (packageName.equals(PACKAGE_GMS)) {
             sIsGms = true;
+        }
+        if (packageName.equals(PACKAGE_NETFLIX) && !SystemProperties.getBoolean(
+                "persist.pixelpropsutils.spoof_netflix", true)) {
+            if (DEBUG) Log.d(TAG, "Netflix spoofing disabled by system prop");
+            return;
         }
         if ((packageName.startsWith("com.google.") && !Arrays.asList(packagesToKeep).contains(packageName))
                 || Arrays.asList(extraPackagesToChange).contains(packageName)) {
