@@ -169,7 +169,7 @@ class RampAnimator<T> {
             final float oldCurrentValue = mCurrentValue;
             mCurrentValue = mAnimatedValue;
             if (oldCurrentValue != mCurrentValue) {
-                mProperty.setValue(mObject, mCurrentValue);
+                setPropertyValue(mCurrentValue);
             }
             if (mTargetValue != mCurrentValue) {
                 postAnimationCallback();
