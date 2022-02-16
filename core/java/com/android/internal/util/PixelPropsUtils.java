@@ -66,6 +66,11 @@ public class PixelPropsUtils {
         propsToChange = new HashMap<>();
         propsToChange.put("BRAND", "google");
         propsToChange.put("MANUFACTURER", "Google");
+        propsToChange.put("IS_DEBUGGABLE", false);
+        propsToChange.put("IS_ENG", false);
+        propsToChange.put("IS_USERDEBUG", false);
+        propsToChange.put("IS_USER", true);
+        propsToChange.put("TYPE", "user");
         propsToChangeP5 = new HashMap<>();
         propsToChangeP5.put("DEVICE", "redfin");
         propsToChangeP5.put("PRODUCT", "redfin");
