@@ -1187,8 +1187,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         if (mTriplePressOnPowerBehavior != MULTI_PRESS_POWER_NOTHING) {
             return 3;
         }
-        if (mDoublePressOnPowerBehavior != MULTI_PRESS_POWER_NOTHING ||
-                mTorchActionMode == 1) {
+        if (mDoublePressOnPowerBehavior != MULTI_PRESS_POWER_NOTHING) {
             return 2;
         }
         return 1;
@@ -2142,10 +2141,13 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
         @Override
         void onLongPress(long eventTime) {
-            if (mSingleKeyGestureDetector.beganFromNonInteractive() ||
-                         (mTorchActionMode != 0 && isFlashLightIsOn())) {
-                if (handleTorchPress(true))
+            if (mSingleKeyGestureDetector.beganFromNonInteractive() || isFlashLightIsOn()) {
+                if (mTorchActionMode != 0) {
+                    performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, false,
+                    "Power - Long Press - Torch");
+                    toggleCameraFlash();
                     return;
+                }
                 if (!mSupportLongPressPowerWhenNonInteractive) {
                     Slog.v(TAG, "Not support long press power when device is not interactive.");
                     return;
@@ -2163,13 +2165,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
         @Override
         void onMultiPress(long downTime, int count) {
-            if (mSingleKeyGestureDetector.beganFromNonInteractive() ||
-                         (mTorchActionMode != 0 && isFlashLightIsOn())) {
-                if (handleTorchPress(false)) {
-                    mSingleKeyGestureDetector.reset();
-                    return;
-                }
-            }
             powerPress(downTime, count, mSingleKeyGestureDetector.beganFromNonInteractive());
         }
     }
@@ -2177,21 +2172,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private boolean isFlashLightIsOn() {
         return Settings.Secure.getInt(mContext.getContentResolver(),
                 Settings.Secure.FLASHLIGHT_ENABLED, 0) != 0;
-    }
-
-    public boolean handleTorchPress(boolean longpress) {
-        if (mTorchActionMode == 2 && longpress) {
-            performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, false,
-                    "Power - Long Press - Torch");
-            toggleCameraFlash();
-            return true;
-        } else if (mTorchActionMode == 1 && !longpress) {
-            performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, false,
-                      "Power - Double Press - Torch");
-            toggleCameraFlash();
-            return true;
-        }
-        return false;
     }
 
     public void toggleCameraFlash() {
@@ -4172,8 +4152,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             return;
         }
 
-        if (event.getKeyCode() == KEYCODE_POWER && event.getAction() == KeyEvent.ACTION_DOWN
-                && mTorchActionMode != 1) {
+        if (event.getKeyCode() == KEYCODE_POWER && event.getAction() == KeyEvent.ACTION_DOWN) {
             mPowerKeyHandled = handleCameraGesture(event, interactive);
             if (mPowerKeyHandled) {
                 // handled by camera gesture.
