@@ -2,7 +2,6 @@ package co.aospa.android.systemui;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.os.Handler;
 
 import co.aospa.android.systemui.dagger.AospaGlobalRootComponent;
 import co.aospa.android.systemui.dagger.AospaSysUIComponent;
