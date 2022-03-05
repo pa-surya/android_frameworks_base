@@ -5,16 +5,22 @@ import android.graphics.Bitmap;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
+import android.graphics.PorterDuff.Mode;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Trace;
 import android.text.TextUtils;
 import android.util.Log;
+
 import androidx.core.graphics.drawable.IconCompat;
 import androidx.slice.Slice;
 import androidx.slice.builders.ListBuilder;
+import androidx.slice.builders.ListBuilder.HeaderBuilder;
+import androidx.slice.builders.ListBuilder.RowBuilder;
 import androidx.slice.builders.SliceAction;
+
 import com.android.systemui.R;
 import com.android.systemui.keyguard.KeyguardSliceProvider;
 import com.google.android.systemui.smartspace.SmartSpaceCard;
@@ -22,204 +28,175 @@ import com.google.android.systemui.smartspace.SmartSpaceController;
 import com.google.android.systemui.smartspace.SmartSpaceData;
 import com.google.android.systemui.smartspace.SmartSpaceUpdateListener;
 
-import java.lang.ref.WeakReference;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
 public class AospaKeyguardSliceProvider extends KeyguardSliceProvider implements SmartSpaceUpdateListener {
-    private static final boolean DEBUG = Log.isLoggable("KeyguardSliceProvider", 3);
-    private boolean mHideSensitiveContent;
+    private static final String TAG = "AospaKeyguardSliceProvider";
+    private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
+
+    private final Uri sCalendarUri = Uri.parse("content://com.android.systemui.keyguard/smartSpace/calendar");
+    private final Uri sWeatherUri = Uri.parse("content://com.android.systemui.keyguard/smartSpace/weather");
+
+    private boolean mHideSensitiveContent = false;
+    private boolean mHideWorkContent = true;
+
     @Inject
     public SmartSpaceController mSmartSpaceController;
-    private SmartSpaceData mSmartSpaceData;
-    private boolean mHideWorkContent = true;
-    private final Uri mWeatherUri = Uri.parse("content://com.android.systemui.keyguard/smartSpace/weather");
-    private final Uri mCalendarUri = Uri.parse("content://com.android.systemui.keyguard/smartSpace/calendar");
+    private SmartSpaceData mSmartSpaceData = new SmartSpaceData();
 
-    @Override // com.android.systemui.keyguard.KeyguardSliceProvider, androidx.slice.SliceProvider
+    private float mBlurRadius = 0f;
+    private final Paint mPaint = new Paint();
+    private final Paint mPaint2 = new Paint();
+
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private ExecutorService mExecutorService = null;
+
+    @Override
     public boolean onCreateSliceProvider() {
-        boolean onCreateSliceProvider = super.onCreateSliceProvider();
-        this.mSmartSpaceData = new SmartSpaceData();
-        this.mSmartSpaceController.addListener(this);
-        return onCreateSliceProvider;
+        if (!super.onCreateSliceProvider()) return false;
+        mBlurRadius = getContext().getResources().getDimension(R.dimen.smartspace_icon_shadow);
+        mPaint.setMaskFilter(new BlurMaskFilter(mBlurRadius, BlurMaskFilter.Blur.NORMAL));
+        mExecutorService = Executors.newSingleThreadExecutor();
+        mSmartSpaceController.addListener(this);
+        return true;
     }
 
-    @Override // com.android.systemui.keyguard.KeyguardSliceProvider
+    @Override
     public void onDestroy() {
+        if (mExecutorService != null) mExecutorService.shutdownNow();
+        mSmartSpaceController.removeListener(this);
         super.onDestroy();
-        this.mSmartSpaceController.removeListener(this);
     }
 
-    @Override // com.android.systemui.keyguard.KeyguardSliceProvider, androidx.slice.SliceProvider
+    @Override
     public Slice onBindSlice(Uri uri) {
-        IconCompat iconCompat;
-        Trace.beginSection("AospKeyguardSliceProvider#onBindSlice");
-        ListBuilder listBuilder = new ListBuilder(getContext(), this.mSliceUri, -1);
+        Trace.beginSection(TAG + "#onBindSlice");
+        final ListBuilder listBuilder = new ListBuilder(getContext(), mSliceUri, -1);
         synchronized (this) {
-            SmartSpaceCard currentCard = this.mSmartSpaceData.getCurrentCard();
-            boolean z = false;
+            SmartSpaceCard currentCard = mSmartSpaceData.getCurrentCard();
+            boolean hasAction = false;
             if (currentCard != null && !currentCard.isExpired() && !TextUtils.isEmpty(currentCard.getTitle())) {
-                boolean isSensitive = currentCard.isSensitive();
-                boolean z2 = isSensitive && !this.mHideSensitiveContent && !currentCard.isWorkProfile();
-                boolean z3 = isSensitive && !this.mHideWorkContent && currentCard.isWorkProfile();
-                if (!isSensitive || z2 || z3) {
-                    z = true;
-                }
+                hasAction = !currentCard.isSensitive() ||
+                    (!mHideSensitiveContent && !currentCard.isWorkProfile()) ||
+                    (!mHideWorkContent && currentCard.isWorkProfile());
             }
-            if (z) {
+            if (hasAction) {
                 Bitmap icon = currentCard.getIcon();
                 SliceAction sliceAction = null;
-                if (icon == null) {
-                    iconCompat = null;
-                } else {
-                    iconCompat = IconCompat.createWithBitmap(icon);
-                }
-                PendingIntent pendingIntent = currentCard.getPendingIntent();
-                if (!(iconCompat == null || pendingIntent == null)) {
+                final IconCompat iconCompat = icon == null ? null : IconCompat.createWithBitmap(icon);
+                final PendingIntent pendingIntent = currentCard.getPendingIntent();
+                if (iconCompat != null && pendingIntent != null) {
                     sliceAction = SliceAction.create(pendingIntent, iconCompat, 1, currentCard.getTitle());
                 }
-                ListBuilder.HeaderBuilder title = new ListBuilder.HeaderBuilder(this.mHeaderUri).setTitle(currentCard.getFormattedTitle());
+                final ListBuilder.HeaderBuilder headerBuilder = new ListBuilder.HeaderBuilder(mHeaderUri);
+                headerBuilder.setTitle(currentCard.getFormattedTitle());
                 if (sliceAction != null) {
-                    title.setPrimaryAction(sliceAction);
+                    headerBuilder.setPrimaryAction(sliceAction);
                 }
-                listBuilder.setHeader(title);
-                String subtitle = currentCard.getSubtitle();
+                listBuilder.setHeader(headerBuilder);
+                final String subtitle = currentCard.getSubtitle();
                 if (subtitle != null) {
-                    ListBuilder.RowBuilder title2 = new ListBuilder.RowBuilder(this.mCalendarUri).setTitle(subtitle);
+                    ListBuilder.RowBuilder rowBuilder = new ListBuilder.RowBuilder(sCalendarUri);
+                    rowBuilder.setTitle(subtitle);
                     if (iconCompat != null) {
-                        title2.addEndItem(iconCompat, 1);
+                        rowBuilder.addEndItem(iconCompat, 1);
                     }
                     if (sliceAction != null) {
-                        title2.setPrimaryAction(sliceAction);
+                        rowBuilder.setPrimaryAction(sliceAction);
                     }
-                    listBuilder.addRow(title2);
+                    listBuilder.addRow(rowBuilder);
                 }
-                addZenModeLocked(listBuilder);
-                addPrimaryActionLocked(listBuilder);
-                Trace.endSection();
-                return listBuilder.build();
-            }
-            if (needsMediaLocked()) {
-                addMediaLocked(listBuilder);
+                addWeather(listBuilder);
             } else {
-                listBuilder.addRow(new ListBuilder.RowBuilder(this.mDateUri).setTitle(getFormattedDateLocked()));
+                if (needsMediaLocked()) {
+                    addMediaLocked(listBuilder);
+                } else {
+                    final ListBuilder.RowBuilder rowBuilder2 = new ListBuilder.RowBuilder(mDateUri);
+                    rowBuilder2.setTitle(getFormattedDateLocked());
+                    listBuilder.addRow(rowBuilder2);
+                }
+                addWeather(listBuilder);
+                addNextAlarmLocked(listBuilder);
             }
-            addWeather(listBuilder);
-            addNextAlarmLocked(listBuilder);
             addZenModeLocked(listBuilder);
             addPrimaryActionLocked(listBuilder);
-            Slice build = listBuilder.build();
-            if (DEBUG) {
-                Log.d("KeyguardSliceProvider", "Binding slice: " + build);
-            }
             Trace.endSection();
-            return build;
+            return listBuilder.build();
         }
     }
 
     private void addWeather(ListBuilder listBuilder) {
-        SmartSpaceCard weatherCard = this.mSmartSpaceData.getWeatherCard();
+        final SmartSpaceCard weatherCard = mSmartSpaceData.getWeatherCard();
         if (weatherCard != null && !weatherCard.isExpired()) {
-            ListBuilder.RowBuilder title = new ListBuilder.RowBuilder(this.mWeatherUri).setTitle(weatherCard.getTitle());
+            final RowBuilder rowBuilder = new RowBuilder(sWeatherUri);
+            rowBuilder.setTitle(weatherCard.getTitle());
             Bitmap icon = weatherCard.getIcon();
             if (icon != null) {
                 IconCompat createWithBitmap = IconCompat.createWithBitmap(icon);
-                createWithBitmap.setTintMode(PorterDuff.Mode.DST);
-                title.addEndItem(createWithBitmap, 1);
+                createWithBitmap.setTintMode(Mode.DST);
+                rowBuilder.addEndItem(createWithBitmap, 1);
             }
-            listBuilder.addRow(title);
+            listBuilder.addRow(rowBuilder);
         }
     }
 
-    @Override // com.google.android.systemui.smartspace.SmartSpaceUpdateListener
-    public void onSensitiveModeChanged(boolean z, boolean z2) {
-        boolean z3;
-        boolean z4;
-        synchronized (this) {
-            z3 = true;
-            if (this.mHideSensitiveContent != z) {
-                this.mHideSensitiveContent = z;
-                if (DEBUG) {
-                    Log.d("KeyguardSliceProvider", "Public mode changed, hide data: " + z);
-                }
-                z4 = true;
-            } else {
-                z4 = false;
-            }
-            if (this.mHideWorkContent != z2) {
-                this.mHideWorkContent = z2;
-                if (DEBUG) {
-                    Log.d("KeyguardSliceProvider", "Public work mode changed, hide data: " + z2);
-                }
-            } else {
-                z3 = z4;
-            }
-        }
-        if (z3) {
-            notifyChange();
-        }
-    }
-
-    @Override // com.google.android.systemui.smartspace.SmartSpaceUpdateListener
+    @Override
     public void onSmartSpaceUpdated(SmartSpaceData smartSpaceData) {
         synchronized (this) {
-            this.mSmartSpaceData = smartSpaceData;
+            mSmartSpaceData = smartSpaceData;
         }
-        SmartSpaceCard weatherCard = smartSpaceData.getWeatherCard();
+        final SmartSpaceCard weatherCard = smartSpaceData.getWeatherCard();
         if (weatherCard == null || weatherCard.getIcon() == null || weatherCard.isIconProcessed()) {
             notifyChange();
             return;
         }
         weatherCard.setIconProcessed(true);
-        new AddShadowTask(this, weatherCard).execute(weatherCard.getIcon());
+        if (mExecutorService != null) mExecutorService.execute(() -> addShadow(weatherCard));
     }
 
-    @Override // com.android.systemui.keyguard.KeyguardSliceProvider
-    protected void updateClockLocked() {
+    private void addShadow(SmartSpaceCard weatherCard) {
+        final int[] iArr = new int[2];
+        final Bitmap bitmap = weatherCard.getIcon();
+        final Bitmap extractAlpha = bitmap.extractAlpha(mPaint, iArr);
+        final Bitmap createBitmap = Bitmap.createBitmap(bitmap.getWidth(),
+            bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(createBitmap);
+        mPaint2.setAlpha(70);
+        canvas.drawBitmap(extractAlpha, (float) iArr[0], ((float) iArr[1]) + (mBlurRadius / 2f), mPaint2);
+        extractAlpha.recycle();
+        mPaint2.setAlpha(255);
+        canvas.drawBitmap(bitmap, 0f, 0f, mPaint2);
+        mHandler.post(() -> {
+            weatherCard.setIcon(createBitmap);
+            notifyChange();
+        });
+    }
+
+    @Override
+    public void onSensitiveModeChanged(boolean hideSensitiveContent, boolean hideWorkContent) {
+        synchronized (this) {
+            boolean changed = false;
+            if (mHideSensitiveContent != hideSensitiveContent) {
+                mHideSensitiveContent = hideSensitiveContent;
+                if (DEBUG) Log.d(TAG, "Public mode changed, hide data: " + hideSensitiveContent);
+                changed = true;
+            }
+            if (mHideWorkContent != hideWorkContent) {
+                mHideWorkContent = hideWorkContent;
+                if (DEBUG) Log.d(TAG, "Public work mode changed, hide data: " + hideWorkContent);
+                changed = true;
+            }
+            if (changed) {
+                notifyChange();
+            }
+        }
+    }
+
+    @Override
+    public void updateClockLocked() {
         notifyChange();
-    }
-
-    private static class AddShadowTask extends AsyncTask<Bitmap, Void, Bitmap> {
-        private final float mBlurRadius;
-        private final WeakReference<AospaKeyguardSliceProvider> mProviderReference;
-        private final SmartSpaceCard mWeatherCard;
-
-        AddShadowTask(AospaKeyguardSliceProvider AospaKeyguardSliceProvider, SmartSpaceCard smartSpaceCard) {
-            this.mProviderReference = new WeakReference<>(AospaKeyguardSliceProvider);
-            this.mWeatherCard = smartSpaceCard;
-            this.mBlurRadius = AospaKeyguardSliceProvider.getContext().getResources().getDimension(R.dimen.smartspace_icon_shadow);
-        }
-
-        public Bitmap doInBackground(Bitmap... bitmapArr) {
-            return applyShadow(bitmapArr[0]);
-        }
-
-        public void onPostExecute(Bitmap bitmap) {
-            AospaKeyguardSliceProvider AospaKeyguardSliceProvider;
-            synchronized (this) {
-                this.mWeatherCard.setIcon(bitmap);
-                AospaKeyguardSliceProvider = this.mProviderReference.get();
-            }
-            if (AospaKeyguardSliceProvider != null) {
-                AospaKeyguardSliceProvider.notifyChange();
-            }
-        }
-
-        private Bitmap applyShadow(Bitmap bitmap) {
-            BlurMaskFilter blurMaskFilter = new BlurMaskFilter(this.mBlurRadius, BlurMaskFilter.Blur.NORMAL);
-            Paint paint = new Paint();
-            paint.setMaskFilter(blurMaskFilter);
-            int[] iArr = new int[2];
-            Bitmap extractAlpha = bitmap.extractAlpha(paint, iArr);
-            Bitmap createBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(createBitmap);
-            Paint paint2 = new Paint();
-            paint2.setAlpha(70);
-            canvas.drawBitmap(extractAlpha, (float) iArr[0], ((float) iArr[1]) + (this.mBlurRadius / 2.0f), paint2);
-            extractAlpha.recycle();
-            paint2.setAlpha(255);
-            canvas.drawBitmap(bitmap, 0.0f, 0.0f, paint2);
-            return createBitmap;
-        }
     }
 }
