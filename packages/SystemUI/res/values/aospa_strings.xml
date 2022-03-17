@@ -59,4 +59,7 @@
     <!-- DC Dimming -->
     <string name="quick_settings_dc_dimming_label">DC Dimming</string>
 
+    <!-- WiFi standard numbering on statusbar -->
+    <string name="status_bar_wifi_standard">Wi-Fi standard number</string>
+
 </resources>
