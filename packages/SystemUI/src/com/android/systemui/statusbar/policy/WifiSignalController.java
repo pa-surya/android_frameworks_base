@@ -36,18 +36,21 @@ import com.android.settingslib.SignalIcon.State;
 import com.android.settingslib.graph.SignalDrawable;
 import com.android.settingslib.mobile.TelephonyIcons;
 import com.android.settingslib.wifi.WifiStatusTracker;
+import com.android.systemui.Dependency;
 import com.android.systemui.R;
 import com.android.systemui.statusbar.FeatureFlags;
 import com.android.systemui.statusbar.policy.NetworkController.IconState;
 import com.android.systemui.statusbar.policy.NetworkController.MobileDataIndicators;
 import com.android.systemui.statusbar.policy.NetworkController.SignalCallback;
 import com.android.systemui.statusbar.policy.NetworkController.WifiIndicators;
+import com.android.systemui.tuner.TunerService;
 
 import java.io.PrintWriter;
 import java.util.Objects;
 
 public class WifiSignalController extends
-        SignalController<WifiSignalController.WifiState, IconGroup> {
+        SignalController<WifiSignalController.WifiState, IconGroup>
+        implements TunerService.Tunable {
     private final boolean mHasMobileDataFeature;
     private final WifiStatusTracker mWifiTracker;
     private final IconGroup mUnmergedWifiIconGroup = WifiIcons.UNMERGED_WIFI;
@@ -59,6 +62,10 @@ public class WifiSignalController extends
     private final IconGroup mWifi4IconGroup;
     private final IconGroup mWifi5IconGroup;
     private final IconGroup mWifi6IconGroup;
+
+    private static final String KEY_WIFI_STANDARD = "wifi_standard";
+    private final boolean mShowWifiStandardDefault;
+    private boolean mShowWifiStandard;
 
     public WifiSignalController(
             Context context,
@@ -80,6 +87,10 @@ public class WifiSignalController extends
             wifiManager.registerTrafficStateCallback(context.getMainExecutor(),
                     new WifiTrafficStateCallback());
         }
+        mShowWifiStandardDefault = context.getResources().getBoolean(
+                com.android.internal.R.bool.config_show_network_standard);
+        mShowWifiStandard = mShowWifiStandardDefault;
+        Dependency.get(TunerService.class).addTunable(this, KEY_WIFI_STANDARD);
 
         mDefaultWifiIconGroup = new IconGroup(
                 "Wi-Fi Icons",
@@ -240,11 +251,18 @@ public class WifiSignalController extends
         return getCurrentIconIdForCarrierWifi();
     }
 
+    @Override
+    public void onTuningChanged(String key, String newValue) {
+        if (key.equals(KEY_WIFI_STANDARD)) {
+            mShowWifiStandard = TunerService.parseIntegerSwitch(newValue,
+                    mShowWifiStandardDefault);
+            updateIconGroup();
+            handleStatusUpdated();
+        }
+    }
 
     private void updateIconGroup() {
-        final boolean showNetworkStandard = mContext.getResources().getBoolean(
-                com.android.internal.R.bool.config_show_network_standard);
-	if (showNetworkStandard) {
+        if (mShowWifiStandard) {
             if (mCurrentState.wifiStandard == 4) {
                 mCurrentState.iconGroup = mWifi4IconGroup;
             } else if (mCurrentState.wifiStandard == 5) {
