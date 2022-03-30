@@ -188,16 +188,23 @@ public class DataSwitchTile extends QSTileImpl<BooleanState> {
                 state.icon = ResourceIcon.get(activeSIMZero
                         ? R.drawable.ic_qs_data_switch_1
                         : R.drawable.ic_qs_data_switch_2);
+                state.secondaryLabel = mContext.getString(activeSIMZero
+                        ? R.string.qs_data_switch_text_1
+                        : R.string.qs_data_switch_text_2);
                 state.value = false;
                 break;
             case 2:
                 state.icon = ResourceIcon.get(activeSIMZero
                         ? R.drawable.ic_qs_data_switch_1
                         : R.drawable.ic_qs_data_switch_2);
+                state.secondaryLabel = mContext.getString(activeSIMZero
+                        ? R.string.qs_data_switch_text_1
+                        : R.string.qs_data_switch_text_2);
                 state.value = true;
                 break;
             default:
                 state.icon = ResourceIcon.get(R.drawable.ic_qs_data_switch_1);
+                state.secondaryLabel = mContext.getString(R.string.qs_data_switch_text_1);
                 state.value = false;
                 break;
         }
@@ -210,11 +217,10 @@ public class DataSwitchTile extends QSTileImpl<BooleanState> {
             state.state = state.value ? 2 : 1;
         }
 
-        state.contentDescription =
-                mContext.getString(activeSIMZero
-                        ? R.string.qs_data_switch_changed_1
-                        : R.string.qs_data_switch_changed_2);
         state.label = mContext.getString(R.string.qs_data_switch_label);
+        state.contentDescription = mContext.getString(activeSIMZero
+                ? R.string.qs_data_switch_changed_1
+                : R.string.qs_data_switch_changed_2);
     }
 
     @Override
