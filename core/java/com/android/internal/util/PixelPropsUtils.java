@@ -46,7 +46,8 @@ public class PixelPropsUtils {
         PACKAGE_NETFLIX
     };
     private static final String[] packagesToChangeP6 = {
-        PACKAGE_GMS
+        PACKAGE_GMS,
+        "com.google.android.inputmethod.latin"
     };
     private static final String[] packagesToChangeP1 = {
          "com.google.android.apps.photos"
