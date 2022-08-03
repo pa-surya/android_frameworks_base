@@ -17,8 +17,6 @@
 package com.android.systemui.qs.tiles;
 
 import static android.hardware.display.DcDimmingManager.MODE_AUTO_TIME;
-import static android.hardware.display.DcDimmingManager.MODE_AUTO_BRIGHTNESS;
-import static android.hardware.display.DcDimmingManager.MODE_AUTO_FULL;
 
 import android.content.Context;
 import android.content.ContentResolver;
@@ -103,28 +101,20 @@ public class DcDimmingTile extends QSTileImpl<QSTile.BooleanState> {
         state.value = dcOn;
         state.label = mContext.getString(R.string.quick_settings_dc_dimming_label);
         state.icon = mIcon;
-        state.contentDescription = TextUtils.isEmpty(state.secondaryLabel)
-                ? state.label
-                : TextUtils.concat(state.label, ", ", state.secondaryLabel);
         switch (mode) {
             case MODE_AUTO_TIME:
                 state.secondaryLabel = mContext.getResources().getString(dcOn
                     ? R.string.quick_settings_dark_mode_secondary_label_until_sunrise
                     : R.string.quick_settings_dark_mode_secondary_label_on_at_sunset);
                 break;
-            case MODE_AUTO_BRIGHTNESS:
-                state.secondaryLabel = mContext.getResources().getString(R.string
-                        .quick_settings_dc_brightness_mode);
-                break;
-            case MODE_AUTO_FULL:
-                state.secondaryLabel = mContext.getResources().getString(R.string
-                        .quick_settings_dc_full_auto);
-                break;
             default:
                 state.secondaryLabel = null;
                 break;
         }
         state.state = state.value ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE;
+        state.contentDescription = TextUtils.isEmpty(state.secondaryLabel)
+                ? state.label
+                : TextUtils.concat(state.label, ", ", state.secondaryLabel);
         state.showRippleEffect = false;
     }
 

@@ -27,12 +27,4 @@ interface IDcDimmingManager {
     void setDcDimming(in boolean enable);
 
     boolean isDcDimmingOn();
-
-    void setBrightnessThreshold(in int thresh);
-
-    int getBrightnessThreshold();
-
-    boolean isForcing();
-
-    void restoreAutoMode();
 }

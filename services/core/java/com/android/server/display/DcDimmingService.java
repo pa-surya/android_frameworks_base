@@ -18,8 +18,6 @@ package com.android.server.display;
 
 import static android.hardware.display.DcDimmingManager.MODE_AUTO_OFF;
 import static android.hardware.display.DcDimmingManager.MODE_AUTO_TIME;
-import static android.hardware.display.DcDimmingManager.MODE_AUTO_BRIGHTNESS;
-import static android.hardware.display.DcDimmingManager.MODE_AUTO_FULL;
 
 import android.annotation.Nullable;
 import android.content.BroadcastReceiver;
@@ -61,59 +59,27 @@ public class DcDimmingService extends SystemService {
     private final Context mContext;
     private final Handler mHandler = new Handler();
     private final Object mLock = new Object();
-    private final String mDcDimmingNode;
-    private final String mDcDimmingEnableValue;
-    private final String mDcDimmingDisableValue;
+    private final String mDcNode;
+    private final String mDcOnValue;
+    private final String mDcOffValue;
     private TwilightManager mTwilightManager;
     private TwilightState mTwilightState;
-    private SettingsObserver mSettingsObserver;
 
-    private int mBrightness;
-    private int mBrightnessAvg;
-    private int mBrightnessThreshold;
     private int mAutoMode;
     private boolean mEnabled;
     private boolean mDcOn;
     private boolean mScreenOff;
     private boolean mPendingOnScreenOn;
-    private boolean mForce;
 
-    private long mAvgStartTime;
-
-    private final ArrayMap<Integer, Long> mBrightnessMap = new ArrayMap<>(20);
-
-    private final Runnable mBrightnessRunnable = new Runnable() {
-        @Override
-        public void run() {
-            boolean prevState = shouldEnableDc();
-            updateBrightnessAvg();
-            Slog.v(TAG, "mBrightnessRunnable mBrightnessAvg:" + mBrightnessAvg);
-            mPendingOnScreenOn = mScreenOff;
-            if (!mHandler.hasCallbacks(mBrightnessRunnable)) {
-                mHandler.postDelayed(mBrightnessRunnable, 60000);
-            }
-            updateForcing(mDcOn);
-            if (!mScreenOff) {
+    private final TwilightListener mTwilightListener = (state) -> {
+        Slog.v(TAG, "onTwilightStateChanged state:" + state);
+        boolean changed = mTwilightState == null || (state.isNight() != mTwilightState.isNight());
+        mPendingOnScreenOn = mScreenOff && changed;
+        mTwilightState = state;
+        if (mAutoMode == MODE_AUTO_TIME) {
+            if (!mScreenOff && changed) {
                 synchronized (mLock) {
-                    updateLocked(mDcOn);
-                }
-            }
-        }
-    };
-
-    private final TwilightListener mTwilightListener = new TwilightListener() {
-        @Override
-        public void onTwilightStateChanged(@Nullable TwilightState state) {
-            Slog.v(TAG, "onTwilightStateChanged state:" + state);
-            boolean changed = mTwilightState == null || (state.isNight() != mTwilightState.isNight());
-            mPendingOnScreenOn = mScreenOff && changed;
-            mTwilightState = state;
-            if (mAutoMode == MODE_AUTO_TIME || mAutoMode == MODE_AUTO_FULL) {
-                updateForcing(mDcOn);
-                if (!mScreenOff && changed) {
-                    synchronized (mLock) {
-                        updateLocked(mDcOn);
-                    }
+                    updateLocked(false, false);
                 }
             }
         }
@@ -123,15 +89,13 @@ public class DcDimmingService extends SystemService {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (Intent.ACTION_SCREEN_ON.equals(intent.getAction())) {
-                Slog.v(TAG, "mIntentReceiver ACTION_SCREEN_ON");
+                Slog.v(TAG, "mIntentReceiver ACTION_SCREEN_ON"
+				+ " mPendingOnScreenOn:" + mPendingOnScreenOn);
                 mScreenOff = false;
-                if (!mPendingOnScreenOn && !mHandler.hasCallbacks(mBrightnessRunnable)) {
-                    mHandler.postDelayed(mBrightnessRunnable, 500);
-                }
                 mHandler.postDelayed(() -> {
                     if (mPendingOnScreenOn) {
                         synchronized (mLock) {
-                            updateLocked(mDcOn);
+                            updateLocked(false, false);
                         }
                     }
                     mPendingOnScreenOn = false;
@@ -139,7 +103,6 @@ public class DcDimmingService extends SystemService {
             } else if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
                 Slog.v(TAG, "mIntentReceiver ACTION_SCREEN_OFF");
                 mScreenOff = true;
-                mHandler.removeCallbacks(mBrightnessRunnable);
             }
         }
     };
@@ -147,13 +110,12 @@ public class DcDimmingService extends SystemService {
     public DcDimmingService(Context context) {
         super(context);
         mContext = context;
-        mDcDimmingNode = context.getResources().getString(
+        mDcNode = context.getResources().getString(
                 com.android.internal.R.string.config_deviceDcDimmingSysfsNode);
-        mDcDimmingEnableValue = context.getResources().getString(
+        mDcOnValue = context.getResources().getString(
                 com.android.internal.R.string.config_deviceDcDimmingEnableValue);
-        mDcDimmingDisableValue = context.getResources().getString(
+        mDcOffValue = context.getResources().getString(
                 com.android.internal.R.string.config_deviceDcDimmingDisableValue);
-        mSettingsObserver = new SettingsObserver(mHandler);
         final IntentFilter intentFilter =
                 new IntentFilter(Intent.ACTION_SCREEN_OFF);
         intentFilter.addAction(Intent.ACTION_SCREEN_ON);
@@ -165,7 +127,7 @@ public class DcDimmingService extends SystemService {
         Slog.v(TAG, "Starting DcDimmingService");
         publishBinderService(Context.DC_DIM_SERVICE, mService);
         publishLocalService(DcDimmingService.class, this);
-        mEnabled = nodeExists() && nodeReadable() && nodeWritable();
+        mEnabled = nodeExists();
     }
 
     @Override
@@ -182,87 +144,53 @@ public class DcDimmingService extends SystemService {
 
     @Override
     public void onUserUnlocking(TargetUser user) {
-        mEnabled = nodeExists() && nodeReadable() && nodeWritable();
+        mEnabled = nodeExists();
         Slog.v(TAG, "onUnlockUser mEnabled:" + mEnabled);
         if (!mEnabled) {
             return;
         }
-        mSettingsObserver.observe();
-        mSettingsObserver.init();
+        mAutoMode = Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.DC_DIMMING_AUTO_MODE, 0, UserHandle.USER_CURRENT);
+        mDcOn = Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.DC_DIMMING_STATE, 0, UserHandle.USER_CURRENT) == 1;
         synchronized (mLock) {
-            updateLocked(mDcOn);
+            updateLocked(false, true);
         }
     }
 
-    private void updateLocked(boolean enable) {
+    private void updateLocked(boolean force, boolean initial) {
         if (!mEnabled) {
             return;
         }
-        String nodeVal = readSysfsNode();
-        Slog.v(TAG, "updateLocked mForce:" + mForce + " enable:" + enable
-                + " nodeVal:" + nodeVal);
-        if (nodeVal == null) {
-            return;
-        }
-        boolean on = nodeVal.equals(mDcDimmingEnableValue);
-        if (mAutoMode != MODE_AUTO_OFF) {
-            if (!mHandler.hasCallbacks(mBrightnessRunnable)) {
-                mHandler.postDelayed(mBrightnessRunnable, 30000);
-            }
-            if (mTwilightState == null && (mAutoMode == MODE_AUTO_TIME
-                    || mAutoMode == MODE_AUTO_FULL)) {
-                mTwilightState = mTwilightManager.getLastTwilightState();
-                if (enable != on) {
-                    writeSysfsNode(enable);
-                }
+        Slog.v(TAG, "updateLocked mDcOn:" + mDcOn + " force:" + force
+                + " initial:" + initial + " shouldEnableDc:" + shouldEnableDc());
+        if (!force) {
+            if (!initial && mDcOn == shouldEnableDc()) {
                 return;
             }
-            Slog.v(TAG, "updateLocked mTwilightState:" + mTwilightState
-                    + " mBrightnessAvg:" + mBrightnessAvg
-                    + " mBrightnessThreshold:" + mBrightnessThreshold);
-            if (mForce) {
-                if (enable != on) {
-                    writeSysfsNode(enable);
-                }
-            } else {
-                writeSysfsNode(shouldEnableDc());
-            }
-        } else {
-            if (on != enable) {
-                writeSysfsNode(enable);
-            }
-            mHandler.removeCallbacks(mBrightnessRunnable);
+            mDcOn = shouldEnableDc();
         }
+        writeSysfsNode(mDcOn ? mDcOnValue : mDcOffValue);
+        Settings.System.putIntForUser(mContext.getContentResolver(),
+                Settings.System.DC_DIMMING_STATE, mDcOn ? 1 : 0,
+                UserHandle.USER_CURRENT);
     }
 
     private boolean shouldEnableDc() {
         switch (mAutoMode) {
             case MODE_AUTO_TIME:
                 return shouldEnableDcTime();
-            case MODE_AUTO_BRIGHTNESS:
-                return shouldEnableDcBrightness();
-            case MODE_AUTO_FULL:
-                return shouldEnableDcFull();
             default:
-                return false;
+                return mDcOn;
         }
     }
 
     private boolean shouldEnableDcTime() {
+        Slog.v(TAG, "shouldEnableDcTime mTwilightState:" + mTwilightState);
+        if (mTwilightState == null) {
+            mTwilightState = mTwilightManager.getLastTwilightState();
+        }
         return mTwilightState != null && mTwilightState.isNight();
-    }
-
-    private boolean shouldEnableDcBrightness() {
-        return mBrightnessAvg != 0 && mBrightnessAvg <= mBrightnessThreshold;
-    }
-
-    private boolean shouldEnableDcFull() {
-        return mTwilightState != null && mTwilightState.isNight()
-                && (mBrightnessAvg != 0 && mBrightnessAvg <= mBrightnessThreshold);
-    }
-
-    private void updateForcing(boolean enable) {
-        mForce = (enable ^ shouldEnableDc()) && mForce;
     }
 
     private final IDcDimmingManager.Stub mService = new IDcDimmingManager.Stub() {
@@ -274,11 +202,9 @@ public class DcDimmingService extends SystemService {
                     if (mAutoMode != mode) {
                         Slog.v(TAG, "setAutoMode(" + mode + ")");
                         mAutoMode = mode;
-                        Settings.System.putIntForUser(mContext
-                                .getContentResolver(),
+                        Settings.System.putIntForUser(mContext.getContentResolver(),
                                 Settings.System.DC_DIMMING_AUTO_MODE, mode,
                                 UserHandle.USER_CURRENT);
-                        updateLocked(mDcOn);
                     }
                 } finally {
                     Binder.restoreCallingIdentity(ident);
@@ -291,8 +217,9 @@ public class DcDimmingService extends SystemService {
             synchronized (mLock) {
                 final long ident = Binder.clearCallingIdentity();
                 try {
-                    mForce = shouldEnableDc() ^ enable;
-                    updateLocked(enable);
+                    Slog.v(TAG, "setDcDimming(" + enable + ")");
+                    mDcOn = enable;
+                    updateLocked(true, false);
                 } finally {
                     Binder.restoreCallingIdentity(ident);
                 }
@@ -313,137 +240,18 @@ public class DcDimmingService extends SystemService {
         public boolean isDcDimmingOn() {
             return mDcOn;
         }
-
-        @Override
-        public void setBrightnessThreshold(int thresh) {
-            mBrightnessThreshold = thresh;
-            mPendingOnScreenOn = mScreenOff;
-            if (!mScreenOff) {
-                synchronized (mLock) {
-                    final long ident = Binder.clearCallingIdentity();
-                    try {
-                        Settings.System.putIntForUser(
-                                mContext.getContentResolver(),
-                                Settings.System.DC_DIMMING_BRIGHTNESS,
-                                thresh, UserHandle.USER_CURRENT);
-                        updateLocked(mDcOn);
-                    } finally {
-                        Binder.restoreCallingIdentity(ident);
-                    }
-                }
-            }
-        }
-
-        @Override
-        public int getBrightnessThreshold() {
-            return mBrightnessThreshold;
-        }
-
-        @Override
-        public boolean isForcing() {
-            return (mAutoMode != MODE_AUTO_OFF) && mForce;
-        }
-
-        @Override
-        public void restoreAutoMode() {
-            synchronized (mLock) {
-                final long ident = Binder.clearCallingIdentity();
-                try {
-                    mForce = false;
-                    updateLocked(mDcOn);
-                } finally {
-                    Binder.restoreCallingIdentity(ident);
-                }
-            }
-        }
     };
 
-    private class SettingsObserver extends ContentObserver {
-
-        SettingsObserver(Handler handler) {
-            super(handler);
-        }
-
-        void observe() {
-            ContentResolver resolver = mContext.getContentResolver();
-            resolver.registerContentObserver(Settings.System.getUriFor(
-                    Settings.System.SCREEN_BRIGHTNESS), false, this,
-                    UserHandle.USER_ALL);
-        }
-
-        void init() {
-            mBrightness = Settings.System.getIntForUser(mContext
-                    .getContentResolver(),
-                    Settings.System.SCREEN_BRIGHTNESS, 0,
-                    UserHandle.USER_CURRENT);
-            mBrightnessThreshold = Settings.System.getIntForUser(
-                    mContext.getContentResolver(),
-                    Settings.System.DC_DIMMING_BRIGHTNESS, 0,
-                    UserHandle.USER_CURRENT);
-            mAutoMode = Settings.System.getIntForUser(mContext
-                    .getContentResolver(),
-                    Settings.System.DC_DIMMING_AUTO_MODE, 0,
-                    UserHandle.USER_CURRENT);
-            mDcOn = Settings.System.getIntForUser(mContext
-                    .getContentResolver(),
-                    Settings.System.DC_DIMMING_STATE, 0,
-                    UserHandle.USER_CURRENT) == 1;
-            mAvgStartTime = SystemClock.uptimeMillis();
-            mBrightnessMap.put(mBrightness, mAvgStartTime);
-        }
-
-        @Override
-        public void onChange(boolean selfChange) {
-            long currTime = SystemClock.uptimeMillis();
-            if (mBrightnessMap.containsKey(mBrightness)) {
-                mBrightnessMap.put(mBrightness, currTime - mBrightnessMap.get(mBrightness));
-            }
-            mBrightness = Settings.System.getIntForUser(mContext
-                    .getContentResolver(),
-                    Settings.System.SCREEN_BRIGHTNESS, 0,
-                    UserHandle.USER_CURRENT);
-            Slog.v(TAG, "onChange brightness:" + mBrightness);
-            mBrightnessMap.put(mBrightness, currTime);
-            if (mBrightnessMap.size() == 20) {
-                updateBrightnessAvg();
-            }
-        }
-    }
-
-    private void updateBrightnessAvg() {
-        Slog.v(TAG, "updateBrightnessAvg()");
-        final int size = mBrightnessMap.size();
-        long totalTime = SystemClock.uptimeMillis() - mAvgStartTime;
-        float tmpFrac = 0.0f;
-        for (int i = 0; i < size; i++) {
-            int brght = mBrightnessMap.keyAt(i);
-            long diffTime = mBrightnessMap.valueAt(i);
-            if (brght == mBrightness) {
-                diffTime = SystemClock.uptimeMillis() - diffTime;
-                mBrightnessMap.put(brght, SystemClock.uptimeMillis());
-            }
-            tmpFrac += (float) brght * ((float) diffTime/totalTime);
-        }
-        ArrayList<Integer> c = new ArrayList<>(1);
-        c.add(mBrightness);
-        mBrightnessMap.retainAll(c);
-        mAvgStartTime = SystemClock.uptimeMillis();
-        mBrightnessAvg = (int) tmpFrac;
-    }
-
-    private boolean writeSysfsNode(boolean enable) {
-        Slog.v(TAG, "writeSysfsNode enable:" + enable);
+    private void writeSysfsNode(String value) {
+        Slog.v(TAG, "writeSysfsNode value:" + value);
         BufferedWriter writer = null;
-
         try {
-            writer = new BufferedWriter(new FileWriter(mDcDimmingNode));
-            writer.write(enable ? mDcDimmingEnableValue : mDcDimmingDisableValue);
+            writer = new BufferedWriter(new FileWriter(mDcNode));
+            writer.write(value);
         } catch (FileNotFoundException e) {
-            Slog.w(TAG, "No such file " + mDcDimmingNode + " for writing", e);
-            return false;
+            Slog.w(TAG, "No such file " + mDcNode + " for writing", e);
         } catch (IOException e) {
-            Slog.e(TAG, "Could not write to file " + mDcDimmingNode, e);
-            return false;
+            Slog.e(TAG, "Could not write to file " + mDcNode, e);
         } finally {
             try {
                 if (writer != null) {
@@ -453,27 +261,18 @@ public class DcDimmingService extends SystemService {
                 // Ignored, not much we can do anyway
             }
         }
-        if (mDcOn != enable) {
-            mDcOn = enable;
-            Settings.System.putIntForUser(mContext
-                    .getContentResolver(),
-                    Settings.System.DC_DIMMING_STATE, enable ? 1 : 0,
-                    UserHandle.USER_CURRENT);
-        }
-        return true;
     }
 
     private String readSysfsNode() {
         String line = null;
         BufferedReader reader = null;
-
         try {
-            reader = new BufferedReader(new FileReader(mDcDimmingNode), 512);
+            reader = new BufferedReader(new FileReader(mDcNode), 512);
             line = reader.readLine();
         } catch (FileNotFoundException e) {
-            Slog.w(TAG, "No such file " + mDcDimmingNode + " for reading", e);
+            Slog.w(TAG, "No such file " + mDcNode + " for reading", e);
         } catch (IOException e) {
-            Slog.e(TAG, "Could not read from file " + mDcDimmingNode, e);
+            Slog.e(TAG, "Could not read from file " + mDcNode, e);
         } finally {
             try {
                 if (reader != null) {
@@ -487,17 +286,7 @@ public class DcDimmingService extends SystemService {
     }
 
     private boolean nodeExists() {
-        final File file = new File(mDcDimmingNode);
-        return file.exists();
-    }
-
-    private boolean nodeReadable() {
-        final File file = new File(mDcDimmingNode);
-        return file.exists() && file.canRead();
-    }
-
-    private boolean nodeWritable() {
-        final File file = new File(mDcDimmingNode);
-        return file.exists() && file.canWrite();
+        final File file = new File(mDcNode);
+        return file.exists() && file.canRead() && file.canWrite();
     }
 }

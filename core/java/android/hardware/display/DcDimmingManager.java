@@ -31,8 +31,6 @@ public class DcDimmingManager {
 
     public static final int MODE_AUTO_OFF = 0;
     public static final int MODE_AUTO_TIME = 1;
-    public static final int MODE_AUTO_BRIGHTNESS = 2;
-    public static final int MODE_AUTO_FULL = 3;
 
     private IDcDimmingManager mService;
 
@@ -70,7 +68,7 @@ public class DcDimmingManager {
     }
 
     /**
-     * Get the DC Dimming mode
+     * Whether the DC Dimming service is available
      * @hide
      */
     public boolean isAvailable() {
@@ -85,7 +83,7 @@ public class DcDimmingManager {
     }
 
     /**
-     * Get the DC Dimming mode
+     * Enable or disable DC Dimming
      * @hide
      */
     public void setDcDimming(boolean enable) {
@@ -98,6 +96,10 @@ public class DcDimmingManager {
         }
     }
 
+    /**
+     * Whether DC Dimming is enabled currently
+     * @hide
+     */
     public boolean isDcDimmingOn() {
         if (mService != null) {
             try {
@@ -107,47 +109,5 @@ public class DcDimmingManager {
             }
         }
         return false;
-    }
-
-    public void setBrightnessThreshold(int thresh) {
-        if (mService != null) {
-            try {
-                mService.setBrightnessThreshold(thresh);
-            } catch (RemoteException e) {
-                throw e.rethrowFromSystemServer();
-            }
-        }
-    }
-
-    public int getBrightnessThreshold() {
-        if (mService != null) {
-            try {
-                return mService.getBrightnessThreshold();
-            } catch (RemoteException e) {
-                throw e.rethrowFromSystemServer();
-            }
-        }
-        return 0;
-    }
-
-    public boolean isForcing() {
-        if (mService != null) {
-            try {
-                return mService.isForcing();
-            } catch (RemoteException e) {
-                throw e.rethrowFromSystemServer();
-            }
-        }
-        return false;
-    }
-
-    public void restoreAutoMode() {
-        if (mService != null) {
-            try {
-                mService.restoreAutoMode();
-            } catch (RemoteException e) {
-                throw e.rethrowFromSystemServer();
-            }
-        }
     }
 }

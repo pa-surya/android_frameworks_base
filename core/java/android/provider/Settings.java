@@ -4416,13 +4416,6 @@ public final class Settings {
         public static final String DC_DIMMING_STATE = "dc_dimming_state";
 
         /**
-         * Indicates the brightness threshold for DC dimming.
-         * 0 - Disabled
-         * @hide
-         */
-        public static final String DC_DIMMING_BRIGHTNESS = "dc_dimming_brightness";
-
-        /**
          * Control whether to enable adaptive sleep mode.
          * @deprecated Use {@link android.provider.Settings.Secure#ADAPTIVE_SLEEP} instead.
          * @hide
