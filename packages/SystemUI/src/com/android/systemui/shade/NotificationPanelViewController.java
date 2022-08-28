@@ -69,6 +69,7 @@ import android.os.Handler;
 import android.os.PowerManager;
 import android.os.Process;
 import android.os.Trace;
+import android.os.UserHandle;
 import android.os.UserManager;
 import android.os.VibrationEffect;
 import android.provider.Settings;
@@ -4296,7 +4297,11 @@ public final class NotificationPanelViewController extends PanelViewController {
                     return false;
                 }
 
-                if (mBarState == StatusBarState.KEYGUARD) {
+                if (mBarState == StatusBarState.KEYGUARD &&
+                        Settings.System.getIntForUser(mView.getContext().getContentResolver(),
+                        Settings.System.GESTURE_DOUBLE_TAP, mView.getContext().getResources()
+                        .getInteger(com.android.internal.R.integer.config_doubleTapDefault),
+                        UserHandle.USER_CURRENT) == 1) {
                     mDoubleTapGestureListener.onTouchEvent(event);
                 }
 
