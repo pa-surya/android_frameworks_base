@@ -68,6 +68,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.os.UserHandle;
 import android.os.UserManager;
 import android.os.VibrationEffect;
 import android.provider.Settings;
@@ -3948,7 +3949,11 @@ public class NotificationPanelViewController extends PanelViewController {
                     return false;
                 }
 
-                if (mBarState == StatusBarState.KEYGUARD && !mPulsing && !mDozing) {
+                if (mBarState == StatusBarState.KEYGUARD && !mPulsing && !mDozing &&
+                        Settings.System.getIntForUser(mView.getContext().getContentResolver(),
+                        Settings.System.GESTURE_DOUBLE_TAP, mView.getContext().getResources()
+                        .getInteger(com.android.internal.R.integer.config_doubleTapDefault),
+                        UserHandle.USER_CURRENT) == 1) {
                     mDoubleTapGestureListener.onTouchEvent(event);
                 } else if (!mQsExpanded
                         && mDoubleTapToSleepEnabled
