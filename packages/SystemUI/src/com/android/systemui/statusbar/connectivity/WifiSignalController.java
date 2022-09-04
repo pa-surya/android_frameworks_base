@@ -49,6 +49,7 @@ public class WifiSignalController extends SignalController<WifiState, IconGroup>
     private final IconGroup mUnmergedWifiIconGroup = WifiIcons.UNMERGED_WIFI;
     private final MobileIconGroup mCarrierMergedWifiIconGroup = TelephonyIcons.CARRIER_MERGED_WIFI;
     private final WifiManager mWifiManager;
+    private final Context mContext;
     private final boolean mProviderModelSetting;
 
     private final IconGroup mDefaultWifiIconGroup;
@@ -71,6 +72,7 @@ public class WifiSignalController extends SignalController<WifiState, IconGroup>
             FeatureFlags featureFlags) {
         super("WifiSignalController", context, NetworkCapabilities.TRANSPORT_WIFI,
                 callbackHandler, networkController);
+        mContext = context;
         mWifiManager = wifiManager;
         mWifiTracker = new WifiStatusTracker(mContext, wifiManager, networkScoreManager,
                 connectivityManager, this::handleStatusUpdated);
@@ -183,8 +185,8 @@ public class WifiSignalController extends SignalController<WifiState, IconGroup>
                 mCurrentState.enabled, statusIcon, qsIcon,
                 ssidPresent && mCurrentState.activityIn,
                 ssidPresent && mCurrentState.activityOut,
-                wifiDesc, mCurrentState.isTransient, mCurrentState.statusLabel, isDefault
-        );
+                wifiDesc, mCurrentState.isTransient, mCurrentState.statusLabel, isDefault,
+                mCurrentState.wifiStandardResId);
         callback.setWifiIndicators(wifiIndicators);
     }
 
@@ -248,24 +250,8 @@ public class WifiSignalController extends SignalController<WifiState, IconGroup>
         if (key.equals(KEY_WIFI_STANDARD)) {
             mShowWifiStandard = TunerService.parseIntegerSwitch(newValue,
                     mShowWifiStandardDefault);
-            updateIconGroup();
+            updateWifiStandardResId();
             handleStatusUpdated();
-        }
-    }
-
-    private void updateIconGroup() {
-        if (mShowWifiStandard) {
-            if (mCurrentState.wifiStandard == 4) {
-                mCurrentState.iconGroup = mWifi4IconGroup;
-            } else if (mCurrentState.wifiStandard == 5) {
-                mCurrentState.iconGroup = mCurrentState.isReady ? mWifi6IconGroup : mWifi5IconGroup;
-            } else if (mCurrentState.wifiStandard == 6) {
-                mCurrentState.iconGroup = mWifi6IconGroup;
-            } else {
-                mCurrentState.iconGroup = mDefaultWifiIconGroup;
-            }
-        } else {
-            mCurrentState.iconGroup = mDefaultWifiIconGroup;
         }
     }
 
@@ -303,10 +289,19 @@ public class WifiSignalController extends SignalController<WifiState, IconGroup>
         mCurrentState.statusLabel = mWifiTracker.statusLabel;
         mCurrentState.isCarrierMerged = mWifiTracker.isCarrierMerged;
         mCurrentState.subId = mWifiTracker.subId;
-        mCurrentState.wifiStandard = mWifiTracker.wifiStandard;
         mCurrentState.isReady = (mWifiTracker.vhtMax8SpatialStreamsSupport
                                     && mWifiTracker.he8ssCapableAp);
-        updateIconGroup();
+        updateWifiStandardResId();
+    }
+
+    private void updateWifiStandardResId() {
+        int wifiStandard = mWifiTracker.wifiStandard;
+        if (mShowWifiStandard && wifiStandard >= 4 && wifiStandard <= 6) {
+            mCurrentState.wifiStandardResId = mContext.getResources().getIdentifier(
+                    "ic_wifi_standard_" + wifiStandard, "drawable", mContext.getPackageName());
+        } else {
+            mCurrentState.wifiStandardResId = 0;
+        }
     }
 
     void notifyWifiLevelChangeIfNecessary(int level) {
