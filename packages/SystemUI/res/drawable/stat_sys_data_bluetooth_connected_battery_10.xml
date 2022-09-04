@@ -6,5 +6,5 @@
     <item
         android:left="22dp"
         android:right="-2dp"
-        android:drawable="@drawable/ic_bluetooth_battery_2" />
+        android:drawable="@drawable/ic_bluetooth_battery_10" />
 </layer-list>

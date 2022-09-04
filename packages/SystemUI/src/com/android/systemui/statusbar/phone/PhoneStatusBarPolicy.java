@@ -474,7 +474,7 @@ public class PhoneStatusBarPolicy
                     && (mBluetooth.isBluetoothAudioActive()
                     || !mBluetooth.isBluetoothAudioProfileOnly())) {
                 int batteryLevel = mBluetooth.getBatteryLevel();
-                if (batteryLevel <= 100 && batteryLevel >= 10) {
+                if (batteryLevel <= 100 && batteryLevel >= 0) {
                     iconId = mResources.getIdentifier("stat_sys_data_bluetooth_connected_battery_"
                             + batteryLevel/10, "drawable", mContext.getPackageName());
                 }
