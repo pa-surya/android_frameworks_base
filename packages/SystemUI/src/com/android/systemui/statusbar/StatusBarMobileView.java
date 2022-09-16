@@ -55,8 +55,8 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
     private View mInoutContainer;
     private ImageView mIn;
     private ImageView mOut;
-    private ImageView mMobile, mMobileType, mMobileRoaming;
-    private View mMobileRoamingSpace;
+    private ImageView mMobile, mMobileType;
+    private View mVolteSpace;
     private int mVisibleState = -1;
     private DualToneHandler mDualToneHandler;
     private boolean mForceHidden;
@@ -120,12 +120,7 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
         mMobileGroup = findViewById(R.id.mobile_group);
         mMobile = findViewById(R.id.mobile_signal);
         mMobileType = findViewById(R.id.mobile_type);
-        if (mProviderModel) {
-            mMobileRoaming = findViewById(R.id.mobile_roaming_large);
-        } else {
-            mMobileRoaming = findViewById(R.id.mobile_roaming);
-        }
-        mMobileRoamingSpace = findViewById(R.id.mobile_roaming_space);
+        mVolteSpace = findViewById(R.id.mobile_volte_space);
         mIn = findViewById(R.id.mobile_in);
         mOut = findViewById(R.id.mobile_out);
         mInoutContainer = findViewById(R.id.inout_container);
@@ -187,8 +182,6 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
             mMobileType.setVisibility(View.GONE);
         }
         mMobile.setVisibility(mState.showTriangle ? View.VISIBLE : View.GONE);
-        mMobileRoaming.setVisibility(mState.roaming ? View.VISIBLE : View.GONE);
-        mMobileRoamingSpace.setVisibility(mState.roaming ? View.VISIBLE : View.GONE);
         mIn.setVisibility(mState.activityIn ? View.VISIBLE : View.GONE);
         mOut.setVisibility(mState.activityOut ? View.VISIBLE : View.GONE);
         mInoutContainer.setVisibility((mState.activityIn || mState.activityOut)
@@ -196,8 +189,10 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
         if (mState.volteId > 0 ) {
             mVolte.setImageResource(mState.volteId);
             mVolte.setVisibility(View.VISIBLE);
+            mVolteSpace.setVisibility(View.VISIBLE);
         }else {
             mVolte.setVisibility(View.GONE);
+            mVolteSpace.setVisibility(View.GONE);
         }
     }
 
@@ -228,8 +223,6 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
         }
 
         mMobile.setVisibility(state.showTriangle ? View.VISIBLE : View.GONE);
-        mMobileRoaming.setVisibility(state.roaming ? View.VISIBLE : View.GONE);
-        mMobileRoamingSpace.setVisibility(state.roaming ? View.VISIBLE : View.GONE);
         mIn.setVisibility(state.activityIn ? View.VISIBLE : View.GONE);
         mOut.setVisibility(state.activityOut ? View.VISIBLE : View.GONE);
         mInoutContainer.setVisibility((state.activityIn || state.activityOut)
@@ -239,12 +232,14 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
             if (state.volteId != 0) {
                 mVolte.setImageResource(state.volteId);
                 mVolte.setVisibility(View.VISIBLE);
+                mVolteSpace.setVisibility(View.VISIBLE);
             } else {
                 mVolte.setVisibility(View.GONE);
+                mVolteSpace.setVisibility(View.GONE);
             }
         }
 
-        needsLayout |= state.roaming != mState.roaming
+        needsLayout |= state.volteId != mState.volteId
                 || state.activityIn != mState.activityIn
                 || state.activityOut != mState.activityOut
                 || state.showTriangle != mState.showTriangle;
@@ -263,7 +258,6 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
         mOut.setImageTintList(color);
         mMobileType.setImageTintList(color);
         mVolte.setImageTintList(color);
-        mMobileRoaming.setImageTintList(color);
         mDotView.setDecorColor(tint);
         mDotView.setIconColor(tint, false);
     }
@@ -285,7 +279,6 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
         mOut.setImageTintList(list);
         mMobileType.setImageTintList(list);
         mVolte.setImageTintList(list);
-        mMobileRoaming.setImageTintList(list);
         mDotView.setDecorColor(color);
     }
 
