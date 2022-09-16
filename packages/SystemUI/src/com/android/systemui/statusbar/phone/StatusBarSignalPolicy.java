@@ -205,7 +205,8 @@ public class StatusBarSignalPolicy implements SignalCallback,
             newState.contentDescription = indicators.statusIcon.contentDescription;
             newState.wifiStandard = indicators.wifiStandard;
             MobileIconState first = getFirstMobileState();
-            newState.signalSpacerVisible = (first != null && first.typeId != 0)
+            newState.signalSpacerVisible = (first != null &&
+                    (first.typeId != 0 || first.volteId != 0))
                     || (indicators.wifiStandard >= 4 && indicators.wifiStandard <= 6);
         }
         newState.slot = mSlotWifi;
@@ -283,7 +284,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
         state.volteId = indicators.volteIcon;
         state.typeSpacerVisible = mMobileStates.size() > 1
                && mMobileStates.get(1).subId == state.subId
-               && state.typeId != 0;
+               && state.typeId != 0 && state.typeId != TelephonyIcons.VOWIFI.dataType;
 
         if (DEBUG) {
             Log.d(TAG, "MobileIconStates: "
