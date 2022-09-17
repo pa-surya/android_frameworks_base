@@ -28,6 +28,8 @@ import android.net.wifi.SoftApConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
 import android.telephony.SubscriptionManager;
@@ -142,6 +144,7 @@ public class InternetDialog extends SystemUIDialog implements
     private Drawable mBackgroundOff = null;
     private int mDefaultDataSubId = SubscriptionManager.INVALID_SUBSCRIPTION_ID;
     private boolean mCanConfigMobileData;
+    private final Vibrator mVibrator;
 
     // Wi-Fi entries
     private int mWifiNetworkHeight;
@@ -184,8 +187,8 @@ public class InternetDialog extends SystemUIDialog implements
         mWifiManager = mInternetDialogController.getWifiManager();
         mCanConfigMobileData = canConfigMobileData;
         mCanConfigWifi = canConfigWifi;
-
         mUiEventLogger = uiEventLogger;
+        mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
         mAdapter = new InternetAdapter(mInternetDialogController);
         if (!aboveStatusBar) {
             getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
@@ -294,6 +297,7 @@ public class InternetDialog extends SystemUIDialog implements
         mHandler.removeCallbacks(mHideProgressBarRunnable);
         mHandler.removeCallbacks(mHideSearchingRunnable);
         mMobileNetworkLayout.setOnClickListener(null);
+        mMobileNetworkLayout.setOnLongClickListener(null);
         mMobileDataToggle.setOnCheckedChangeListener(null);
         mHotspotLayout.setOnClickListener(null);
         mHotspotToggle.setOnCheckedChangeListener(null);
@@ -368,6 +372,12 @@ public class InternetDialog extends SystemUIDialog implements
                     mInternetDialogController.connectCarrierNetwork();
                 }
             }
+        });
+        mMobileNetworkLayout.setOnLongClickListener(v -> {
+                mVibrator.vibrate(VibrationEffect.createOneShot(
+                        25, VibrationEffect.DEFAULT_AMPLITUDE));
+                mInternetDialogController.launchMobileNetworkSetting();
+                return true;
         });
         mMobileDataToggle.setOnCheckedChangeListener(
                 (buttonView, isChecked) -> {
