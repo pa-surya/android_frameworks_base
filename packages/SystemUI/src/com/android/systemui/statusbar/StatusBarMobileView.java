@@ -56,7 +56,7 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
     private ImageView mIn;
     private ImageView mOut;
     private ImageView mMobile, mMobileType;
-    private View mVolteSpace;
+    private View mTypeSpace, mVolteSpace;
     private int mVisibleState = -1;
     private DualToneHandler mDualToneHandler;
     private boolean mForceHidden;
@@ -120,6 +120,7 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
         mMobileGroup = findViewById(R.id.mobile_group);
         mMobile = findViewById(R.id.mobile_signal);
         mMobileType = findViewById(R.id.mobile_type);
+        mTypeSpace = findViewById(R.id.mobile_type_space);
         mVolteSpace = findViewById(R.id.mobile_volte_space);
         mIn = findViewById(R.id.mobile_in);
         mOut = findViewById(R.id.mobile_out);
@@ -181,6 +182,7 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
         } else {
             mMobileType.setVisibility(View.GONE);
         }
+        mTypeSpace.setVisibility(mState.typeSpacerVisible ? View.VISIBLE : View.GONE);
         mMobile.setVisibility(mState.showTriangle ? View.VISIBLE : View.GONE);
         mIn.setVisibility(mState.activityIn ? View.VISIBLE : View.GONE);
         mOut.setVisibility(mState.activityOut ? View.VISIBLE : View.GONE);
@@ -221,7 +223,7 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
                 mMobileType.setVisibility(View.GONE);
             }
         }
-
+        mTypeSpace.setVisibility(state.typeSpacerVisible ? View.VISIBLE : View.GONE);
         mMobile.setVisibility(state.showTriangle ? View.VISIBLE : View.GONE);
         mIn.setVisibility(state.activityIn ? View.VISIBLE : View.GONE);
         mOut.setVisibility(state.activityOut ? View.VISIBLE : View.GONE);
