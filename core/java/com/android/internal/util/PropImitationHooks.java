@@ -79,6 +79,10 @@ public class PropImitationHooks {
     private static final boolean sSpoofGapps =
             Resources.getSystem().getBoolean(R.bool.config_spoofGoogleApps);
 
+    private static final String PACKAGE_NETFLIX = "com.netflix.mediaclient";
+    private static final String sNetflixModel =
+            Resources.getSystem().getString(R.string.config_netflixSpoofModel);
+
     private static volatile boolean sIsGms = false;
     private static volatile boolean sIsFinsky = false;
     private static volatile boolean sIsPhotos = false;
@@ -108,6 +112,9 @@ public class PropImitationHooks {
         } else if (sIsPhotos) {
             dlog("Spoofing Pixel XL for Google Photos");
             sP1Props.forEach((k, v) -> setPropValue(k, v));
+        } else if (!sNetflixModel.isEmpty() && packageName.equals(PACKAGE_NETFLIX)) {
+            dlog("Setting model to " + sNetflixModel + " for Netflix");
+            setPropValue("MODEL", sNetflixModel);
         }
     }
 
