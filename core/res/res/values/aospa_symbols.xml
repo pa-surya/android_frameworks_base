@@ -87,4 +87,13 @@
     <!-- Device model (Build.MODEL) to spoof for netflix, if not empty -->
     <java-symbol type="string" name="config_netflixSpoofModel" />
 
+    <!-- Power Menu Reboot -->
+    <java-symbol name="reboot_to_bootloader_title" type="string" />
+    <java-symbol name="reboot_to_bootloader_message" type="string" />
+    <java-symbol name="reboot_to_recovery_title" type="string" />
+    <java-symbol name="reboot_to_recovery_message" type="string" />
+    <java-symbol name="reboot_system_title" type="string" />
+    <java-symbol name="reboot_system_message" type="string" />
+    <java-symbol type="array" name="config_rebootActionsList" />
+
 </resources>
