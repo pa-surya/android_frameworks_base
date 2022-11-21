@@ -41,6 +41,7 @@ import android.widget.LinearLayout;
 
 import com.android.systemui.R;
 import com.android.systemui.animation.Interpolators;
+import com.android.systemui.battery.BatteryMeterView;
 import com.android.systemui.flags.FeatureFlags;
 import com.android.systemui.plugins.statusbar.StatusBarStateController;
 import com.android.systemui.statusbar.CommandQueue;
@@ -229,6 +230,8 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         initEmergencyCryptkeeperText();
         initOperatorName();
         initNotificationIconArea();
+        BatteryMeterView bmv = (BatteryMeterView) mStatusBar.findViewById(R.id.battery);
+        bmv.setIsStatusBar(true);
         mSystemEventAnimator =
                 new StatusBarSystemEventAnimator(mSystemIconArea, getResources());
         mCarrierConfigTracker.addCallback(mCarrierConfigCallback);
