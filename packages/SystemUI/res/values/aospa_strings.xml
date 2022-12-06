@@ -68,6 +68,9 @@
     <!-- Name of the VoWiFi status bar icon. -->
     <string name="status_bar_vowifi">VoWiFi</string>
 
+    <!-- Name of the network traffic indicator on status bar. -->
+    <string name="status_bar_network_traffic">Real-time internet speed</string>
+
     <!-- Bluetooth dialog -->
     <string name="turn_on_bluetooth">Use Bluetooth</string>
     <string name="bluetooth_is_off">Bluetooth is off</string>
