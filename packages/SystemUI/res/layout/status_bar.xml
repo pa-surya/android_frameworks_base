@@ -93,6 +93,19 @@
                         android:gravity="center_vertical|start"
                     />
 
+                    <com.android.systemui.statusbar.policy.NetworkTraffic
+                        android:id="@+id/network_traffic"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:textAppearance="@style/TextAppearance.StatusBar.Clock"
+                        android:maxLines="2"
+                        android:lineSpacingMultiplier="0.85"
+                        android:includeFontPadding="false"
+                        android:paddingStart="3dp"
+                        android:paddingEnd="@dimen/status_bar_left_clock_end_padding"
+                        android:gravity="center"
+                    />
+
                     <include layout="@layout/ongoing_call_chip" />
 
                     <com.android.systemui.statusbar.AlphaOptimizedFrameLayout

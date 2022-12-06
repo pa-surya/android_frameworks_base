@@ -67,6 +67,19 @@
             <include layout="@layout/system_icons" />
         </FrameLayout>
 
+        <com.android.systemui.statusbar.policy.NetworkTraffic
+            android:id="@+id/network_traffic"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.StatusBar.Clock"
+            android:maxLines="2"
+            android:lineSpacingMultiplier="0.85"
+            android:includeFontPadding="false"
+            android:paddingStart="2dp"
+            android:paddingEnd="2dp"
+        />
+
         <ImageView android:id="@+id/multi_user_avatar"
             android:layout_width="@dimen/multi_user_avatar_keyguard_size"
             android:layout_height="@dimen/multi_user_avatar_keyguard_size"
