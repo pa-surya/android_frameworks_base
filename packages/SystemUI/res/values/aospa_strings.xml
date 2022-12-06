@@ -84,4 +84,7 @@
         <item>Don\'t show this icon</item>
     </string-array>
 
+    <!-- Name of the network traffic indicator on status bar. -->
+    <string name="status_bar_network_traffic">Real-time internet speed</string>
+
 </resources>
