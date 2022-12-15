@@ -27,26 +27,6 @@
     android:orientation="horizontal"
     android:clickable="true">
 
-    <FrameLayout
-        android:id="@+id/date_container"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center_vertical|start" >
-
-        <com.android.systemui.statusbar.policy.VariableDateView
-            android:id="@+id/date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start|center_vertical"
-            android:gravity="center_vertical"
-            android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.QS.Status"
-            systemui:longDatePattern="@string/abbrev_wday_month_day_no_year_alarm"
-            systemui:shortDatePattern="@string/abbrev_month_day_no_year"
-        />
-    </FrameLayout>
-
     <!-- We want this to be centered (to align with notches). In order to do that, the following
          has to hold (in portrait):
          * date_container and privacy_container must have the same width and weight
