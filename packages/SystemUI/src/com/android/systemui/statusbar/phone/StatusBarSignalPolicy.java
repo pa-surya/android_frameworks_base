@@ -283,8 +283,10 @@ public class StatusBarSignalPolicy implements SignalCallback,
         state.typeContentDescription = indicators.typeContentDescription;
         state.showTriangle = indicators.showTriangle;
         state.roaming = indicators.roaming && !mHideRoaming;
-        state.activityIn = indicators.activityIn && mActivityEnabled;
-        state.activityOut = indicators.activityOut && mActivityEnabled;
+        state.activityEnabled = mActivityEnabled
+                && state.typeId != TelephonyIcons.VOWIFI.dataType;
+        state.activityIn = indicators.activityIn;
+        state.activityOut = indicators.activityOut;
         state.volteId = indicators.volteIcon;
         state.typeSpacerVisible = mMobileStates.size() > 1
                && mMobileStates.get(1).subId == state.subId
@@ -593,6 +595,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
         public CharSequence typeContentDescription;
         public int volteId;
         public boolean typeSpacerVisible;
+        public boolean activityEnabled;
 
         private MobileIconState(int subId) {
             super();
@@ -616,7 +619,8 @@ public class StatusBarSignalPolicy implements SignalCallback,
                     && needsLeadingPadding == that.needsLeadingPadding
                     && Objects.equals(typeContentDescription, that.typeContentDescription)
                     && volteId == that.volteId
-                    && typeSpacerVisible == that.typeSpacerVisible;
+                    && typeSpacerVisible == that.typeSpacerVisible
+                    && activityEnabled == that.activityEnabled;
         }
 
         @Override
@@ -624,7 +628,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
 
             return Objects
                     .hash(super.hashCode(), subId, strengthId, typeId, showTriangle, roaming,
-                            needsLeadingPadding, typeContentDescription);
+                            needsLeadingPadding, typeContentDescription, activityEnabled);
         }
 
         public MobileIconState copy() {
@@ -644,6 +648,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
             other.typeContentDescription = typeContentDescription;
             other.volteId = volteId;
             other.typeSpacerVisible = typeSpacerVisible;
+            other.activityEnabled = activityEnabled;
         }
 
         private static List<MobileIconState> copyStates(List<MobileIconState> inStates) {
@@ -662,6 +667,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
                     + ", showTriangle=" + showTriangle + ", roaming=" + roaming
                     + ", typeId=" + typeId + ", volteId=" + volteId
                     + ", typeSpacerVisible=" + typeSpacerVisible
+                    + ", activityEnabled=" + activityEnabled
                     + ", visible=" + visible + ")";
         }
     }
