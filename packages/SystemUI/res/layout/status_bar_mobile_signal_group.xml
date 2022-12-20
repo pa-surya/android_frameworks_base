@@ -23,53 +23,50 @@
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
     android:gravity="center_vertical">
-    <com.android.keyguard.AlphaOptimizedLinearLayout
+    <LinearLayout
         android:id="@+id/mobile_group"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:gravity="center_vertical"
         android:orientation="horizontal" >
-        <FrameLayout
-            android:id="@+id/inout_container"
-            android:layout_height="17dp"
-            android:layout_width="wrap_content"
-            android:layout_gravity="center_vertical">
-            <ImageView
-                android:id="@+id/mobile_in"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:src="@drawable/ic_activity_down"
-                android:visibility="gone"
-                android:paddingEnd="2dp"
-            />
-            <ImageView
-                android:id="@+id/mobile_out"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:src="@drawable/ic_activity_up"
-                android:paddingEnd="2dp"
-                android:visibility="gone"
-            />
-        </FrameLayout>
         <Space
             android:id="@+id/mobile_type_space"
             android:layout_height="match_parent"
-            android:layout_width="1.5dp"
+            android:layout_width="2dp"
             android:visibility="gone"
         />
-        <ImageView
-            android:id="@+id/mobile_type"
-            android:layout_height="wrap_content"
+        <LinearLayout
+            android:id="@+id/mobile_type_container"
             android:layout_width="wrap_content"
+            android:layout_height="15dp"
             android:layout_gravity="center_vertical"
-            android:paddingStart="2.5dp"
-            android:paddingEnd="2dp"
-            android:scaleType="centerInside"
-            android:visibility="gone" />
+            android:orientation="vertical"
+            android:paddingHorizontal="2dp"
+            android:visibility="gone">
+            <ImageView
+                android:id="@+id/mobile_type"
+                android:layout_height="@dimen/mobile_type_icon_height"
+                android:layout_width="wrap_content"
+                android:layout_marginVertical="@dimen/mobile_type_icon_margin_vertical"
+                android:layout_gravity="center_horizontal"
+                android:gravity="center"
+                android:scaleType="centerInside"
+                android:adjustViewBounds="true" />
+            <ImageView
+                android:id="@+id/mobile_inout"
+                android:layout_height="7dp"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:gravity="center"
+                android:paddingTop="1dp"
+                android:scaleType="centerInside"
+                android:adjustViewBounds="true"
+                android:visibility="gone" />
+        </LinearLayout>
         <Space
             android:id="@+id/mobile_volte_space"
             android:layout_height="match_parent"
-            android:layout_width="4dp"
+            android:layout_width="3dp"
             android:visibility="gone"
         />
         <FrameLayout
@@ -88,6 +85,6 @@
                 android:layout_width="wrap_content"
                 android:visibility="gone" />
         </FrameLayout>
-    </com.android.keyguard.AlphaOptimizedLinearLayout>
+    </LinearLayout>
 </com.android.systemui.statusbar.StatusBarMobileView>
 
