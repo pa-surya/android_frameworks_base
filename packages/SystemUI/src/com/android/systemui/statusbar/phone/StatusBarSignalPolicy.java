@@ -204,6 +204,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
         } else {
             newState.visible = visible;
             newState.resId = indicators.statusIcon.icon;
+            newState.activityEnabled = mActivityEnabled;
             newState.activityIn = in;
             newState.activityOut = out;
             newState.contentDescription = indicators.statusIcon.contentDescription;
@@ -283,8 +284,10 @@ public class StatusBarSignalPolicy implements SignalCallback,
         state.typeContentDescription = indicators.typeContentDescription;
         state.showTriangle = indicators.showTriangle;
         state.roaming = indicators.roaming && !mHideRoaming;
-        state.activityIn = indicators.activityIn && mActivityEnabled;
-        state.activityOut = indicators.activityOut && mActivityEnabled;
+        state.activityEnabled = mActivityEnabled
+                && state.typeId != TelephonyIcons.VOWIFI.dataType;
+        state.activityIn = indicators.activityIn;
+        state.activityOut = indicators.activityOut;
         state.volteId = indicators.volteIcon;
         state.typeSpacerVisible = mMobileStates.size() > 1
                && mMobileStates.get(1).subId == state.subId
@@ -490,6 +493,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
 
     private static abstract class SignalIconState {
         public boolean visible;
+        public boolean activityEnabled;
         public boolean activityOut;
         public boolean activityIn;
         public String slot;
@@ -503,6 +507,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
             }
             SignalIconState that = (SignalIconState) o;
             return visible == that.visible &&
+                    activityEnabled == that.activityEnabled &&
                     activityOut == that.activityOut &&
                     activityIn == that.activityIn &&
                     Objects.equals(contentDescription, that.contentDescription) &&
@@ -511,11 +516,12 @@ public class StatusBarSignalPolicy implements SignalCallback,
 
         @Override
         public int hashCode() {
-            return Objects.hash(visible, activityOut, slot);
+            return Objects.hash(visible, activityEnabled, activityIn, activityOut, slot);
         }
 
         protected void copyTo(SignalIconState other) {
             other.visible = visible;
+            other.activityEnabled = activityEnabled;
             other.activityIn = activityIn;
             other.activityOut = activityOut;
             other.slot = slot;
