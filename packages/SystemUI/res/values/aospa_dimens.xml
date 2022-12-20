@@ -22,4 +22,10 @@
     <!-- Bluetooth dialog -->
     <dimen name="bluetooth_dialog_active_device_bottom_margin">4dp</dimen>
 
+    <!-- Mobile data type icon -->
+    <dimen name="mobile_type_icon_height">12dp</dimen>
+    <dimen name="mobile_type_icon_height_with_activity">8dp</dimen>
+    <dimen name="mobile_type_icon_margin_vertical">1.5dp</dimen>
+    <dimen name="mobile_type_icon_inset_vertical">-2dp</dimen>
+
 </resources>
