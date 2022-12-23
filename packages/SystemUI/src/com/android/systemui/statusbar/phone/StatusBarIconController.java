@@ -526,10 +526,8 @@ public interface StatusBarIconController {
         }
 
         public void onSetIcon(int viewIndex, StatusBarIcon icon) {
-            View view = mGroup.getChildAt(viewIndex);
-            if (view instanceof StatusBarIconView) {
-                ((StatusBarIconView) view).set(icon);
-            }
+            StatusBarIconView view = (StatusBarIconView) mGroup.getChildAt(viewIndex);
+            view.set(icon);
         }
 
         public void onSetIconHolder(int viewIndex, StatusBarIconHolder holder) {
@@ -569,11 +567,14 @@ public interface StatusBarIconController {
         }
 
         public void onSetMobileIcon(int viewIndex, MobileIconState state) {
+            StatusBarMobileView sbView;
             View view = mGroup.getChildAt(viewIndex);
+            sbView = null;
             if (view instanceof StatusBarMobileView) {
-                ((StatusBarMobileView) view).applyMobileState(state);
-            } else {
-                return;
+                sbView = (StatusBarMobileView) view;
+            }
+            if (sbView != null) {
+                sbView.applyMobileState(state);
             }
 
             if (mIsInDemoMode) {
@@ -584,9 +585,14 @@ public interface StatusBarIconController {
         }
 
         public void onSetBluetoothIcon(int viewIndex, BluetoothIconState state) {
+            StatusBarBluetoothView sbView;
             View view = mGroup.getChildAt(viewIndex);
+            sbView = null;
             if (view instanceof StatusBarBluetoothView) {
-                ((StatusBarBluetoothView) view).applyBluetoothState(state);
+                sbView = (StatusBarBluetoothView) view;
+            }
+            if (sbView != null) {
+                sbView.applyBluetoothState(state);
             }
         }
 
