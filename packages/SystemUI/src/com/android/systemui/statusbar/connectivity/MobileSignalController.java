@@ -44,7 +44,12 @@ import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyDisplayInfo;
 import android.telephony.TelephonyManager;
+import android.telephony.ims.ImsException;
+import android.telephony.ims.ImsMmTelManager;
+import android.telephony.ims.ImsReasonInfo;
+import android.telephony.ims.ImsRegistrationAttributes;
 import android.telephony.ims.ImsStateCallback;
+import android.telephony.ims.RegistrationManager.RegistrationCallback;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
@@ -79,6 +84,7 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
     private static final int STATUS_HISTORY_SIZE = 64;
     private final TelephonyManager mPhone;
     private final CarrierConfigTracker mCarrierConfigTracker;
+    private final ImsMmTelManager mImsMmTelManager;
     private final SubscriptionDefaults mDefaults;
     private final String mNetworkNameDefault;
     private final String mNetworkNameSeparator;
@@ -139,6 +145,24 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
                 }
             };
 
+    private final RegistrationCallback mRegistrationCallback = new RegistrationCallback() {
+        @Override
+        public void onRegistered(ImsRegistrationAttributes attributes) {
+            Log.d(mTag, "onRegistered: " + "attributes=" + attributes);
+            mCurrentState.imsRegistered = true;
+            mCurrentState.imsRegistrationTech = attributes.getRegistrationTechnology();
+            notifyListenersIfNecessary();
+        }
+
+        @Override
+        public void onUnregistered(ImsReasonInfo info) {
+            Log.d(mTag, "onDeregistered: " + "info=" + info);
+            mCurrentState.imsRegistered = false;
+            mCurrentState.imsRegistrationTech = REGISTRATION_TECH_NONE;
+            notifyListenersIfNecessary();
+        }
+    };
+
     // TODO: Reduce number of vars passed in, if we have the NetworkController, probably don't
     // need listener lists anymore.
     public MobileSignalController(
@@ -186,6 +210,7 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
             }
         };
         mMobileStatusTracker = mobileStatusTrackerFactory.createTracker(mMobileCallback);
+        mImsMmTelManager = ImsMmTelManager.createForSubscriptionId(info.getSubscriptionId());
     }
 
     void setConfiguration(Config config) {
@@ -237,6 +262,14 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
                 true, mObserver);
         mContext.registerReceiver(mVolteSwitchObserver,
                 new IntentFilter("org.codeaurora.intent.action.ACTION_ENHANCE_4G_SWITCH"));
+        if (mConfig.showVolteIcon || mConfig.showVowifiIcon) {
+            try {
+                mImsMmTelManager.registerImsStateCallback(mContext.getMainExecutor(),
+                        mImsStateCallback);
+            } catch (ImsException exception) {
+                Log.e(mTag, "failed to call registerImsStateCallback ", exception);
+            }
+        }
     }
 
     /**
@@ -245,7 +278,15 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
     public void unregisterListener() {
         mMobileStatusTracker.setListening(false);
         mContext.getContentResolver().unregisterContentObserver(mObserver);
+        try {
+            mImsMmTelManager.unregisterImsRegistrationCallback(mRegistrationCallback);
+        } catch (Exception e){
+            Log.e(mTag, "unregisterListener: fail to call unregisterImsRegistrationCallback", e);
+        }
         mContext.unregisterReceiver(mVolteSwitchObserver);
+        if (mConfig.showVolteIcon || mConfig.showVowifiIcon) {
+            mImsMmTelManager.unregisterImsStateCallback(mImsStateCallback);
+        }
     }
 
     private void updateInflateSignalStrength() {
@@ -308,6 +349,15 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
     }
 
     private void setListeners() {
+        try {
+            Log.d(mTag, "setListeners: register CapabilitiesCallback and RegistrationCallback");
+            mImsMmTelManager.registerMmTelCapabilityCallback(mContext.getMainExecutor(),
+                    mCapabilityCallback);
+            mImsMmTelManager.registerImsRegistrationCallback(mContext.getMainExecutor(),
+                    mRegistrationCallback);
+        } catch (ImsException e) {
+            Log.e(mTag, "unable to register listeners.", e);
+        }
         queryImsState();
     }
 
@@ -323,6 +373,17 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
                     + " imsResitered=" + mCurrentState.imsRegistered);
         }
         notifyListenersIfNecessary();
+    }
+
+    private void removeListeners() {
+        try {
+            Log.d(mTag,
+                    "removeListeners: unregister CapabilitiesCallback and RegistrationCallback");
+            mImsMmTelManager.unregisterMmTelCapabilityCallback(mCapabilityCallback);
+            mImsMmTelManager.unregisterImsRegistrationCallback(mRegistrationCallback);
+        } catch (Exception e) {
+            Log.e(mTag, "removeListeners", e);
+        }
     }
 
     @Override
@@ -896,6 +957,25 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
         }
     };
 
+    private final ImsStateCallback mImsStateCallback = new ImsStateCallback() {
+        @Override
+        public void onUnavailable(int reason) {
+            Log.d(mTag, "ImsStateCallback.onUnavailable: reason=" + reason);
+            removeListeners();
+        }
+
+        @Override
+        public void onAvailable() {
+            Log.d(mTag, "ImsStateCallback.onAvailable");
+            setListeners();
+        }
+
+        @Override
+        public void onError() {
+            Log.e(mTag, "ImsStateCallback.onError");
+            removeListeners();
+        }
+    };
 
     /** Box for QS icon info */
     private static final class QsInfo {
