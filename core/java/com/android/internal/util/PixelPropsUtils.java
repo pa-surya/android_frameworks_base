@@ -86,6 +86,7 @@ public class PixelPropsUtils {
 
     private static final String PACKAGE_PREFIX_GOOGLE = "com.google.android.";
     private static final String PACKAGE_ARCORE = "com.google.ar.core";
+    private static final String PACKAGE_NETFLIX = "com.netflix.mediaclient";
     private static final String PACKAGE_GPHOTOS = "com.google.android.apps.photos";
     private static final String PACKAGE_FINSKY = "com.android.vending";
     private static final String PACKAGE_GMS = "com.google.android.gms";
@@ -96,6 +97,9 @@ public class PixelPropsUtils {
 
     private static final String sStockFp =
             Resources.getSystem().getString(R.string.config_stockFingerprint);
+
+    private static final String sNetflixModel =
+            Resources.getSystem().getString(R.string.config_netflixSpoofModel);
 
     private static volatile boolean sIsGms = false;
     private static volatile boolean sIsFinsky = false;
@@ -128,6 +132,9 @@ public class PixelPropsUtils {
         } else if (!sStockFp.isEmpty() && packageName.equals(PACKAGE_ARCORE)) {
             dlog("Setting stock fingerprint for: " + packageName);
             setPropValue("FINGERPRINT", sStockFp);
+        } else if (!sNetflixModel.isEmpty() && packageName.equals(PACKAGE_NETFLIX)) {
+            dlog("Setting model to " + sNetflixModel + " for Netflix");
+            setPropValue("MODEL", sNetflixModel);
         } else if ((packageName.startsWith(PACKAGE_PREFIX_GOOGLE)
                 && !packageName.toLowerCase().contains("camera"))
                 || sExtraPackages.contains(packageName)) {

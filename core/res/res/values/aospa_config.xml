@@ -103,4 +103,7 @@
     <!-- Whether to show WiFi/Hotspot standard -->
     <bool name="config_show_network_standard">false</bool>
 
+    <!-- Device model (Build.MODEL) to spoof for netflix, if not empty -->
+    <string name="config_netflixSpoofModel" translatable="false"></string>
+
 </resources>
