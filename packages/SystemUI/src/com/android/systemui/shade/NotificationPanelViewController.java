@@ -2544,6 +2544,7 @@ public final class NotificationPanelViewController extends PanelViewController {
 
         mDepthController.setQsPanelExpansion(qsExpansionFraction);
         mStatusBarKeyguardViewManager.setQsExpansion(qsExpansionFraction);
+        mNotificationsQSContainerController.setQsExpandedFraction(qsExpansionFraction);
 
         // updateQsExpansion will get called whenever mTransitionToFullShadeProgress or
         // mLockscreenShadeTransitionController.getDragProgress change.
