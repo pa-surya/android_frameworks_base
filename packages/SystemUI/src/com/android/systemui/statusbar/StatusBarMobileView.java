@@ -25,6 +25,7 @@ import static com.android.systemui.statusbar.StatusBarIconView.STATE_ICON;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Rect;
+import android.graphics.drawable.InsetDrawable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -244,15 +245,18 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
 
     // Sets the mobile type icon and network activity indicators.
     private void updateMobileTypeLayout(MobileIconState state) {
-        if (state.typeId > 0) {
-            mMobileType.setContentDescription(state.typeContentDescription);
-            mMobileType.setImageResource(state.typeId);
-            mMobileTypeContainer.setVisibility(View.VISIBLE);
-        } else {
+        if (state.typeId == 0) {
             // Container is hidden, nothing else to do here.
             mMobileTypeContainer.setVisibility(View.GONE);
             return;
         }
+        mMobileTypeContainer.setVisibility(View.VISIBLE);
+
+        int inset = getContext().getResources().getDimensionPixelSize(
+                R.dimen.mobile_type_icon_inset_vertical);
+        mMobileType.setImageDrawable(new InsetDrawable(
+                getContext().getDrawable(state.typeId), 0, inset, 0, inset));
+        mMobileType.setContentDescription(state.typeContentDescription);
 
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams)
                 mMobileType.getLayoutParams();
