@@ -112,10 +112,9 @@
             android:gravity="center"
             android:textAppearance="@style/TextAppearance.QS.Status"
             android:maxLines="2"
-            android:lineSpacingMultiplier="0.85"
+            android:lineSpacingMultiplier="0.8"
             android:includeFontPadding="false"
-            android:paddingStart="2dp"
-            android:paddingEnd="2dp" />
+            android:paddingHorizontal="2dp" />
     </LinearLayout>
     </FrameLayout>
 

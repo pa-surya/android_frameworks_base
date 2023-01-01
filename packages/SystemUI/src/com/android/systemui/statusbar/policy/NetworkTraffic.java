@@ -166,6 +166,11 @@ public class NetworkTraffic extends TextView implements TunerService.Tunable,
 
         // Size is formatted as 10.25 KB (for example), so we split it into the size and unit
         String[] sizes = size.split(" ");
+        if (sizes.length != 2) {
+            Log.e(TAG, "Invalid size: " + sizes + " (originally " + size + ")");
+            return;
+        }
+
         SpannableStringBuilder text = new SpannableStringBuilder()
                 .append(sizes[0], new RelativeSizeSpan(0.7f), SPAN_EXCLUSIVE_EXCLUSIVE)
                 .append("\n")
@@ -200,14 +205,14 @@ public class NetworkTraffic extends TextView implements TunerService.Tunable,
     /**
      * Since TextView adds some unwanted padding above the text, our view wasn't being
      * properly centered vertically. To workaround this problem, offset the canvas
-     * vertically by the difference between the font metrics' top and ascent values.
-     * https://stackoverflow.com/a/23063015
+     * vertically by the difference between the font metrics' recommended and maximum values.
+     * Ref: https://stackoverflow.com/a/23063015
      */
     @Override
     protected void onDraw(Canvas canvas) {
         FontMetricsInt fmi = getPaint().getFontMetricsInt();
         dlog("onDraw fmi=" + fmi);
-        canvas.translate(0, fmi.top - fmi.ascent);
+        canvas.translate(0, fmi.top - fmi.ascent - fmi.bottom + fmi.descent);
         super.onDraw(canvas);
     }
 
