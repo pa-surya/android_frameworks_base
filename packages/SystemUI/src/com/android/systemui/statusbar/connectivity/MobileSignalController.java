@@ -582,7 +582,7 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
             str.append(plmn);
             strData.append(plmn);
         }
-        if (showSpn && spn != null) {
+        if (showSpn && spn != null && !spn.equalsIgnoreCase(plmn)) {
             if (str.length() != 0) {
                 str.append(mNetworkNameSeparator);
             }
