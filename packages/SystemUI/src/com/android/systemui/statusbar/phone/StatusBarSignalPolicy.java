@@ -537,6 +537,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
         public boolean noValidatedNetwork;
         public boolean noNetworksAvailable;
         public int wifiStandard;
+        public int inetCondition;
 
         @Override
         public boolean equals(Object o) {
@@ -554,7 +555,8 @@ public class StatusBarSignalPolicy implements SignalCallback,
                     && noDefaultNetwork == that.noDefaultNetwork
                     && noValidatedNetwork == that.noValidatedNetwork
                     && noNetworksAvailable == that.noNetworksAvailable
-                    && wifiStandard == that.wifiStandard;
+                    && wifiStandard == that.wifiStandard
+                    && inetCondition == that.inetCondition;
         }
 
         public void copyTo(WifiIconState other) {
@@ -566,6 +568,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
             other.noValidatedNetwork = noValidatedNetwork;
             other.noNetworksAvailable = noNetworksAvailable;
             other.wifiStandard = wifiStandard;
+            other.inetCondition = inetCondition;
         }
 
         public WifiIconState copy() {
@@ -578,7 +581,7 @@ public class StatusBarSignalPolicy implements SignalCallback,
         public int hashCode() {
             return Objects.hash(super.hashCode(),
                     resId, airplaneSpacerVisible, signalSpacerVisible, noDefaultNetwork,
-                    noValidatedNetwork, noNetworksAvailable);
+                    noValidatedNetwork, noNetworksAvailable, inetCondition);
         }
 
         @Override public String toString() {

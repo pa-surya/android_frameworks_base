@@ -236,7 +236,7 @@ public class StatusBarWifiView extends BaseStatusBarWifiView implements DarkRece
                 resid = R.drawable.ic_wifi_standard_6;
                 break;
         }
-        if (resid > 0) {
+        if (resid > 0 && state.inetCondition != 0) {
             mWifiStandard.setVisibility(View.VISIBLE);
             mWifiStandard.setImageDrawable(mContext.getDrawable(resid));
         } else {
