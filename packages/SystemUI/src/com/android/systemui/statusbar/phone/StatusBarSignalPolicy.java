@@ -284,14 +284,15 @@ public class StatusBarSignalPolicy implements SignalCallback,
         state.typeContentDescription = indicators.typeContentDescription;
         state.showTriangle = indicators.showTriangle;
         state.roaming = indicators.roaming && !mHideRoaming;
-        state.activityEnabled = mActivityEnabled
-                && state.typeId != TelephonyIcons.VOWIFI.dataType;
         state.activityIn = indicators.activityIn;
         state.activityOut = indicators.activityOut;
         state.volteId = indicators.volteIcon;
+
+        boolean isVowifiIcon = state.typeId == TelephonyIcons.VOWIFI.dataType;
+        state.activityEnabled = mActivityEnabled && !isVowifiIcon;
         state.typeSpacerVisible = mMobileStates.size() > 1
                && mMobileStates.get(1).subId == state.subId
-               && state.typeId != 0;
+               && state.typeId != 0 && !isVowifiIcon;
 
         if (DEBUG) {
             Log.d(TAG, "MobileIconStates: "
