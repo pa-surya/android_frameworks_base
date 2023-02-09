@@ -72,10 +72,8 @@
     <!-- Cycle through ringer modes -->
     <java-symbol type="string" name="volume_dialog_ringer_guidance_normal" />
 
-    <!-- Fingerprint from a certified device against current platform SPL level -->
-    <java-symbol type="string" name="config_certifiedFingerprint" />
-
-    <!-- Fingerprint from stock ROM -->
+    <!-- PropImitationHooks -->
+    <java-symbol type="array" name="config_certifiedBuildProperties" />
     <java-symbol type="string" name="config_stockFingerprint" />
 
     <!-- For dynamic default font styles -->
