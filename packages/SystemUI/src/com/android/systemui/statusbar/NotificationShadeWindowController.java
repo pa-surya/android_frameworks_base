@@ -146,6 +146,9 @@ public interface NotificationShadeWindowController extends RemoteInputController
     /** Sets the state of whether sysui is dreaming or not. */
     default void setDreaming(boolean dreaming) {}
 
+    /** Sets the state of whether sysui is pulsing or not. */
+    default void setPulsing(boolean pulsing) {}
+
     /** Sets the state of whether plugin open is forced or not. */
     default void setForcePluginOpen(boolean forcePluginOpen, Object token) {}
 

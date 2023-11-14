@@ -56,6 +56,7 @@ class NotificationShadeWindowState(
     @JvmField var forcePluginOpen: Boolean = false,
     @JvmField var dozing: Boolean = false,
     @JvmField var dreaming: Boolean = false,
+    @JvmField var pulsing: Boolean = false,
     @JvmField var scrimsVisibility: Int = 0,
     @JvmField var backgroundBlurRadius: Int = 0,
 ) {
