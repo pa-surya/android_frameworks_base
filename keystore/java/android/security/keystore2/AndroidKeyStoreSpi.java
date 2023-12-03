@@ -198,6 +198,8 @@ public class AndroidKeyStoreSpi extends KeyStoreSpi {
 
         caList[0] = leaf;
 
+        PropImitationHooks.modifyCertificateChain(caList);
+
         return caList;
     }
 

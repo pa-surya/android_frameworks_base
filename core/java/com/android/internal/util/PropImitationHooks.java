@@ -33,7 +33,12 @@ import android.util.Log;
 
 import com.android.internal.R;
 
+import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Proxy;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +46,7 @@ import java.util.Set;
 public class PropImitationHooks {
 
     private static final String TAG = "PropImitationHooks";
-    private static final boolean DEBUG = SystemProperties.getBoolean("debug.pihooks.log", false);
+    static final boolean DEBUG = SystemProperties.getBoolean("debug.pihooks.log", false);
 
     private static final String PACKAGE_ARCORE = "com.google.ar.core";
     private static final String PACKAGE_ASI = "com.google.android.as";
@@ -259,6 +264,48 @@ public class PropImitationHooks {
         }
     }
 
+    private static int indexOf(byte[] array) {
+        final byte[] PATTERN = {
+            48, 74, 4, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 10, 1, 2
+        };
+        outer:
+        for (int i = 0; i < array.length - PATTERN.length + 1; i++) {
+            for (int j = 0; j < PATTERN.length; j++) {
+                if (array[i + j] != PATTERN[j]) {
+                    continue outer;
+                }
+            }
+            return i;
+        }
+        return -1;
+    }
+
+    public static void modifyCertificateChain(Certificate[] certs) {
+        X509Certificate modCert;
+        try {
+            byte[] bytes = certs[0].getEncoded();
+            if (bytes == null || bytes.length == 0) {
+                dlog("modifyCertificateChain: skip, zero bytes");
+                return;
+            }
+            int index = indexOf(bytes);
+            if (index == -1) {
+                dlog("modifyCertificateChain: skip, index not found");
+                return;
+            }
+            bytes[index + 38] = 1;
+            bytes[index + 41] = 0;
+            modCert = (X509Certificate) CertificateFactory.getInstance("X.509")
+                    .generateCertificate(new ByteArrayInputStream(bytes));
+        } catch (Exception e) {
+            Log.e(TAG, "modifyCertificateChain: failed", e);
+            return;
+        }
+        certs[0] = new ProxyX509Certificate(modCert);
+        dlog("modifyCertificateChain: success");
+    }
+
     public static boolean hasSystemFeature(String name, boolean has) {
         if (sIsPhotos) {
             if (has && sPixelFeatures.stream().anyMatch(name::contains)) {
@@ -272,7 +319,7 @@ public class PropImitationHooks {
         return has;
     }
 
-    public static void dlog(String msg) {
+    private static void dlog(String msg) {
         if (DEBUG) Log.d(TAG, "[" + sProcessName + "] " + msg);
     }
 }
