@@ -19,6 +19,7 @@
 package com.android.internal.util;
 
 import android.app.ActivityTaskManager;
+import android.app.ActivityThread;
 import android.app.Application;
 import android.app.TaskStackListener;
 import android.content.ComponentName;
@@ -28,6 +29,7 @@ import android.os.Build;
 import android.os.Binder;
 import android.os.Process;
 import android.os.SystemProperties;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -93,6 +95,12 @@ public class PropImitationHooks {
         "PIXEL_2019_PRELOAD",
         "PIXEL_2020_EXPERIENCE",
         "PIXEL_2020_MIDYEAR_EXPERIENCE"
+    );
+
+    private static final Set<String> sDevSettings = Set.of(
+        Settings.Global.ADB_ENABLED,
+        Settings.Global.ADB_WIFI_ENABLED,
+        Settings.Global.DEVELOPMENT_SETTINGS_ENABLED
     );
 
     private static volatile String[] sCertifiedProps;
@@ -317,6 +325,20 @@ public class PropImitationHooks {
             }
         }
         return has;
+    }
+
+    public static String getGlobalSettingString(String name, String value) {
+        if (sDevSettings.contains(name)) {
+            dlog("Settings.Global." + name + " accessed by package="
+                    + ActivityThread.currentPackageName());
+            final Application app = ActivityThread.currentApplication();
+            if (app != null && !app.getApplicationInfo().isSystemApp()
+                    && !app.getApplicationInfo().isUpdatedSystemApp()) {
+                dlog("not system app, returning 0");
+                return "0";
+            }
+        }
+        return value;
     }
 
     private static void dlog(String msg) {

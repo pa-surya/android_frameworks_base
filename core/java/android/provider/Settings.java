@@ -94,6 +94,7 @@ import android.widget.Editor;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.util.Preconditions;
+import com.android.internal.util.PropImitationHooks;
 import com.android.internal.widget.ILockSettings;
 
 import java.io.IOException;
@@ -16616,7 +16617,8 @@ public final class Settings {
                         + " to android.provider.Settings.System, returning read-only value.");
                 return System.getStringForUser(resolver, name, userHandle);
             }
-            return sNameValueCache.getStringForUser(resolver, name, userHandle);
+            return PropImitationHooks.getGlobalSettingString(name,
+                    sNameValueCache.getStringForUser(resolver, name, userHandle));
         }
 
         /**
