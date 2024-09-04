@@ -356,7 +356,18 @@ public class ResourcesImpl {
             throws NotFoundException {
         getValue(id, tempValue, true);
         try {
-            return mAssets.openNonAssetFd(tempValue.assetCookie, tempValue.string.toString());
+            String fileName = tempValue.string.toString();
+            if (fileName.startsWith("frro://")) {
+                Uri uri = Uri.parse(fileName);
+                File f = new File('/' + uri.getHost() + uri.getPath());
+                ParcelFileDescriptor pfd = ParcelFileDescriptor.open(f,
+                        ParcelFileDescriptor.MODE_READ_ONLY);
+                return new AssetFileDescriptor(
+                        pfd,
+                        Long.parseLong(uri.getQueryParameter("offset")),
+                        Long.parseLong(uri.getQueryParameter("size")));
+            }
+            return mAssets.openNonAssetFd(tempValue.assetCookie, fileName);
         } catch (Exception e) {
             throw new NotFoundException("File " + tempValue.string.toString() + " from "
                     + "resource ID #0x" + Integer.toHexString(id), e);
@@ -367,6 +378,18 @@ public class ResourcesImpl {
     InputStream openRawResource(@RawRes int id, TypedValue value) throws NotFoundException {
         getValue(id, value, true);
         try {
+            String fileName = value.string.toString();
+            if (fileName.startsWith("frro://")) {
+                Uri uri = Uri.parse(fileName);
+                File f = new File('/' + uri.getHost() + uri.getPath());
+                ParcelFileDescriptor pfd = ParcelFileDescriptor.open(f,
+                        ParcelFileDescriptor.MODE_READ_ONLY);
+                AssetFileDescriptor afd = new AssetFileDescriptor(
+                        pfd,
+                        Long.parseLong(uri.getQueryParameter("offset")),
+                        Long.parseLong(uri.getQueryParameter("size")));
+                return afd.createInputStream();
+            }
             return mAssets.openNonAsset(value.assetCookie, value.string.toString(),
                     AssetManager.ACCESS_STREAMING);
         } catch (Exception e) {
