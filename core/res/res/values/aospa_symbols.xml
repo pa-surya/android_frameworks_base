@@ -70,7 +70,7 @@
     <java-symbol type="bool" name="config_usesRichtapVibration" />
 
     <!-- PropImitationHooks -->
-    <java-symbol type="array" name="config_certifiedBuildProperties" />
+    <java-symbol type="raw" name="certified_props" />
     <java-symbol type="string" name="config_stockFingerprint" />
     <java-symbol type="string" name="config_netflixSpoofModel" />
 
