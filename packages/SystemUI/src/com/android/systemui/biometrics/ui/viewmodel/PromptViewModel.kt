@@ -447,13 +447,6 @@ constructor(
     }
 
     private suspend fun needsExplicitConfirmation(modality: BiometricModality): Boolean {
-        val confirmationRequired = isConfirmationRequired.first()
-
-        // Only worry about confirmationRequired if face was used to unlock
-        if (modality == BiometricModality.Face) {
-            return confirmationRequired
-        }
-        // fingerprint only never requires confirmation
         return false
     }
 
