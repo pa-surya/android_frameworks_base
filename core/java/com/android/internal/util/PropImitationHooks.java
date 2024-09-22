@@ -33,9 +33,13 @@ import android.util.Log;
 
 import com.android.internal.R;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Set;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * @hide
@@ -74,11 +78,12 @@ public class PropImitationHooks {
         "PIXEL_EXPERIENCE"
     );
 
-    private static volatile String[] sCertifiedProps;
+    private static volatile JSONObject sCertifiedProps;
     private static volatile String sStockFp, sNetflixModel;
 
     private static volatile String sProcessName;
     private static volatile boolean sIsPixelDevice, sIsGms, sIsFinsky, sIsPhotos;
+    private static volatile Context sContext;
 
     public static void setProps(Context context) {
         final String packageName = context.getPackageName();
@@ -95,7 +100,7 @@ public class PropImitationHooks {
             return;
         }
 
-        sCertifiedProps = res.getStringArray(R.array.config_certifiedBuildProperties);
+        sContext = context;
         sStockFp = res.getString(R.string.config_stockFingerprint);
         sNetflixModel = res.getString(R.string.config_netflixSpoofModel);
 
@@ -120,21 +125,47 @@ public class PropImitationHooks {
         }
     }
 
-    private static void setPropValue(String key, String value) {
+    private static void setPropValue(String key, Object value, Boolean isVersionField) {
+        if (TextUtils.isEmpty(key) || value == null) {
+            Log.e(TAG, "invalid key/value pair: " + key + ":" + value);
+            return;
+        }
         try {
             dlog("Setting prop " + key + " to " + value.toString());
-            Class clazz = Build.class;
-            if (key.startsWith("VERSION.")) {
-                clazz = Build.VERSION.class;
-                key = key.substring(8);
-            }
+            Class clazz = isVersionField ? Build.VERSION.class : Build.class;
             Field field = clazz.getDeclaredField(key);
             field.setAccessible(true);
-            // Cast the value to int if it's an integer field, otherwise string.
-            field.set(null, field.getType().equals(Integer.TYPE) ? Integer.parseInt(value) : value);
+            field.set(null, value);
             field.setAccessible(false);
         } catch (Exception e) {
             Log.e(TAG, "Failed to set prop " + key, e);
+        }
+    }
+
+    private static void setPropValue(String key, Object value) {
+        setPropValue(key, value, false);
+    }
+
+    private static void loadCertifiedProps() {
+        byte[] jsonBytes;
+        try {
+            jsonBytes = sContext.getResources().openRawResource(
+                    R.raw.certified_build_props).readAllBytes();
+        } catch (IOException e) {
+            Log.e(TAG, "loadCertifiedProps: failed to read json!", e);
+            return;
+        }
+
+        String jsonString = new String(jsonBytes, StandardCharsets.UTF_8);
+        if (TextUtils.isEmpty(jsonString)) {
+            dlog("loadCertifiedProps: json is empty, bailing");
+            return;
+        }
+
+        try {
+            sCertifiedProps = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            Log.e(TAG, "loadCertifiedProps: failed to parse json!", e);
         }
     }
 
@@ -147,7 +178,9 @@ public class PropImitationHooks {
             return;
         }
 
-        if (sCertifiedProps.length == 0) {
+        loadCertifiedProps();
+
+        if (sCertifiedProps == null || sCertifiedProps.length() == 0) {
             dlog("Certified props are not set");
             return;
         }
@@ -178,15 +211,25 @@ public class PropImitationHooks {
     }
 
     private static void setCertifiedProps() {
-        for (String entry : sCertifiedProps) {
-            // Each entry must be of the format FIELD:value
-            final String[] fieldAndProp = entry.split(":", 2);
-            if (fieldAndProp.length != 2) {
-                Log.e(TAG, "Invalid entry in certified props: " + entry);
-                continue;
+        sCertifiedProps.keySet().forEach(key -> {
+            try {
+                Object value = sCertifiedProps.get(key);
+                if (key.equals("VERSION")) {
+                    JSONObject versionProps = (JSONObject) value;
+                    versionProps.keySet().forEach(versionKey -> {
+                        try {
+                            setPropValue(versionKey, versionProps.get(versionKey), true);
+                        } catch (JSONException e) {
+                            Log.e(TAG, "failed to get value for key: " + versionKey, e);
+                        }
+                    });
+                } else {
+                    setPropValue(key, value);
+                }
+            } catch (JSONException e) {
+                Log.e(TAG, "failed to get value for key: " + key, e);
             }
-            setPropValue(fieldAndProp[0], fieldAndProp[1]);
-        }
+        });
         setSystemProperty(PROP_SECURITY_PATCH, Build.VERSION.SECURITY_PATCH);
         setSystemProperty(PROP_FIRST_API_LEVEL,
                 Integer.toString(Build.VERSION.DEVICE_INITIAL_SDK_INT));
@@ -223,7 +266,7 @@ public class PropImitationHooks {
         final int gmsUid;
         try {
             gmsUid = context.getPackageManager().getApplicationInfo(PACKAGE_GMS, 0).uid;
-            dlog("shouldBypassTaskPermission: gmsUid:" + gmsUid + " callingUid:" + callingUid);
+            // dlog("shouldBypassTaskPermission: gmsUid:" + gmsUid + " callingUid:" + callingUid);
         } catch (Exception e) {
             Log.e(TAG, "shouldBypassTaskPermission: unable to get gms uid", e);
             return false;
