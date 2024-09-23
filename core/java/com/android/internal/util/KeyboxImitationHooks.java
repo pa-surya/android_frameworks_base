@@ -4,10 +4,12 @@
  */
 package com.android.internal.util;
 
+import android.app.Application;
 import android.os.SystemProperties;
 import android.security.KeyChain;
 import android.security.keystore.KeyProperties;
 import android.system.keystore2.KeyEntryResponse;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.android.internal.org.bouncycastle.asn1.ASN1Boolean;
@@ -48,6 +50,8 @@ public class KeyboxImitationHooks {
 
     private static final ASN1ObjectIdentifier KEY_ATTESTATION_OID = new ASN1ObjectIdentifier(
             "1.3.6.1.4.1.11129.2.1.17");
+
+    private static volatile String sProcessName;
 
     private static PrivateKey parsePrivateKey(String encodedKey, String algorithm)
             throws Exception {
@@ -170,6 +174,14 @@ public class KeyboxImitationHooks {
     }
 
     public static KeyEntryResponse onGetKeyEntry(KeyEntryResponse response) {
+        final String processName = Application.getProcessName();
+        if (TextUtils.isEmpty(processName)) {
+            Log.e(TAG, "Null process name");
+            return response;
+        }
+
+        sProcessName = processName;
+
         if (sDisableKeyAttestationBlock) {
             dlog("Key attestation spoofing is disabled by user");
             return response;
@@ -181,31 +193,32 @@ public class KeyboxImitationHooks {
             return response;
         }
 
-        if (response == null || response.metadata == null) return response;
+        if (response == null || response.metadata == null || response.metadata.certificate == null)
+            return response;
 
         try {
-            if (response.metadata.certificate == null) {
-                Log.e(TAG, "Certificate is null, skipping modification");
-                return response;
-            }
-
             X509Certificate certificate = KeyChain.toCertificate(response.metadata.certificate);
             if (certificate.getExtensionValue(KEY_ATTESTATION_OID.getId()) == null) {
-                Log.e(TAG, "Key attestation OID not found, skipping modification");
+                dlog("Key attestation OID not found, skipping modification");
                 return response;
             }
 
             String keyAlgorithm = certificate.getPublicKey().getAlgorithm();
             response.metadata.certificate = modifyLeafCertificate(certificate, keyAlgorithm);
             response.metadata.certificateChain = getCertificateChain(keyAlgorithm);
+            dlog("Succesfully modified certificate chain");
         } catch (Exception e) {
-            Log.e(TAG, "Error in onGetKeyEntry", e);
+            elog("Error in onGetKeyEntry", e);
         }
 
         return response;
     }
 
     private static void dlog(String msg) {
-        if (DEBUG) Log.d(TAG, msg);
+        if (DEBUG) Log.d(TAG, "[" + sProcessName + "] " + msg);
+    }
+
+    private static void elog(String msg, Exception e) {
+        Log.e(TAG, "[" + sProcessName + "] " + msg, e);
     }
 }
