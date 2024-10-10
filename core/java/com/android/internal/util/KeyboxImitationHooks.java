@@ -5,6 +5,7 @@
 package com.android.internal.util;
 
 import android.app.Application;
+import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.security.KeyChain;
 import android.security.keystore.KeyProperties;
@@ -45,13 +46,12 @@ public class KeyboxImitationHooks {
     private static final String TAG = "KeyboxImitationHooks";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
-    private static final Boolean sDisableKeyAttestationBlock = SystemProperties.getBoolean(
-            "persist.sys.pihooks.disable.gms_key_attestation_block", false);
-
     private static final ASN1ObjectIdentifier KEY_ATTESTATION_OID = new ASN1ObjectIdentifier(
             "1.3.6.1.4.1.11129.2.1.17");
 
     private static volatile String sProcessName;
+    private static volatile String ecPrivKey, rsaPrivKey;
+    private static volatile String[] ecCertChain, rsaCertChain;
 
     private static PrivateKey parsePrivateKey(String encodedKey, String algorithm)
             throws Exception {
@@ -65,10 +65,9 @@ public class KeyboxImitationHooks {
     }
 
     private static byte[] getCertificateChain(String algorithm) throws Exception {
-        IKeyboxProvider provider = KeyProviderManager.getProvider();
         String[] certChain = KeyProperties.KEY_ALGORITHM_EC.equals(algorithm)
-                ? provider.getEcCertificateChain()
-                : provider.getRsaCertificateChain();
+                ? ecCertChain
+                : rsaCertChain;
 
         ByteArrayOutputStream certificateStream = new ByteArrayOutputStream();
         for (String cert : certChain) {
@@ -78,19 +77,17 @@ public class KeyboxImitationHooks {
     }
 
     private static PrivateKey getPrivateKey(String algorithm) throws Exception {
-        IKeyboxProvider provider = KeyProviderManager.getProvider();
         String privateKeyEncoded = KeyProperties.KEY_ALGORITHM_EC.equals(algorithm)
-                ? provider.getEcPrivateKey()
-                : provider.getRsaPrivateKey();
+                ? ecPrivKey
+                : rsaPrivKey;
 
         return parsePrivateKey(privateKeyEncoded, algorithm);
     }
 
     private static X509CertificateHolder getCertificateHolder(String algorithm) throws Exception {
-        IKeyboxProvider provider = KeyProviderManager.getProvider();
         String certChain = KeyProperties.KEY_ALGORITHM_EC.equals(algorithm)
-                ? provider.getEcCertificateChain()[0]
-                : provider.getRsaCertificateChain()[0];
+                ? ecCertChain[0]
+                : rsaCertChain[0];
 
         return new X509CertificateHolder(parseCertificate(certChain));
     }
@@ -174,15 +171,17 @@ public class KeyboxImitationHooks {
     }
 
     public static KeyEntryResponse onGetKeyEntry(KeyEntryResponse response) {
+        if (response == null || response.metadata == null || response.metadata.certificate == null)
+            return response;
+
         final String processName = Application.getProcessName();
         if (TextUtils.isEmpty(processName)) {
             Log.e(TAG, "Null process name");
             return response;
         }
-
         sProcessName = processName;
 
-        if (sDisableKeyAttestationBlock) {
+        if (PropImitationHooks.sDisableKeyAttestationBlock) {
             dlog("Key attestation spoofing is disabled by user");
             return response;
         }
@@ -193,13 +192,26 @@ public class KeyboxImitationHooks {
             return response;
         }
 
-        if (response == null || response.metadata == null || response.metadata.certificate == null)
-            return response;
-
         try {
             X509Certificate certificate = KeyChain.toCertificate(response.metadata.certificate);
             if (certificate.getExtensionValue(KEY_ATTESTATION_OID.getId()) == null) {
                 dlog("Key attestation OID not found, skipping modification");
+                return response;
+            }
+
+            IKeyboxProvider provider = KeyProviderManager.getProvider();
+            if (provider == null) {
+                return response;
+            }
+
+            try {
+                dlog("Using keybox provider: " + provider.getName());
+                ecPrivKey = provider.getEcPrivateKey();
+                rsaPrivKey = provider.getRsaPrivateKey();
+                ecCertChain = provider.getEcCertificateChain();
+                rsaCertChain = provider.getRsaCertificateChain();
+            } catch (RemoteException e) {
+                Log.e(TAG, "Failed to load keybox data", e);
                 return response;
             }
 
