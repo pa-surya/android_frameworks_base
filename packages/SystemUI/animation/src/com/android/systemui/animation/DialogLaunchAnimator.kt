@@ -35,6 +35,7 @@ import android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALW
 import com.android.app.animation.Interpolators
 import com.android.internal.jank.InteractionJankMonitor
 import com.android.internal.jank.InteractionJankMonitor.CujType
+import com.android.systemui.util.BlurUtils
 import com.android.systemui.util.maybeForceFullscreen
 import com.android.systemui.util.registerAnimationOnBackInvoked
 import kotlin.math.roundToInt
@@ -573,6 +574,8 @@ private class AnimatedDialog(
 
     private var hasInstrumentedJank = false
 
+    private val blurUtils = BlurUtils(dialog.context.resources)
+
     fun start() {
         val cuj = controller.cuj
         if (cuj != null) {
@@ -970,6 +973,15 @@ private class AnimatedDialog(
                     if (endController is GhostedViewLaunchAnimatorController) {
                         endController.fillGhostedViewState(endState)
                     }
+
+                    // Blur the background
+                    blurUtils.applyBlur(
+                        viewRootImpl = decorView.viewRootImpl,
+                        radius = blurUtils.blurRadiusOfRatio(
+                            if (isLaunching) progress else 1f - progress
+                        ).toInt(),
+                        opaque = false
+                    )
                 }
             }
 
