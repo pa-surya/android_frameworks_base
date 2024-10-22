@@ -6,7 +6,6 @@ package com.android.internal.util;
 
 import android.app.Application;
 import android.os.RemoteException;
-import android.os.SystemProperties;
 import android.security.KeyChain;
 import android.security.keystore.KeyProperties;
 import android.system.keystore2.KeyEntryResponse;
@@ -181,14 +180,9 @@ public class KeyboxImitationHooks {
         }
         sProcessName = processName;
 
-        if (PropImitationHooks.sDisableKeyAttestationBlock) {
-            dlog("Key attestation spoofing is disabled by user");
-            return response;
-        }
-
         // If no keybox is found, don't continue spoofing
         if (!KeyProviderManager.isKeyboxAvailable()) {
-            dlog("Key attestation spoofing is disabled because no keybox is defined to spoof");
+            dlog("Key attestation spoofing is unavailable");
             return response;
         }
 
