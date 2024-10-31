@@ -169,9 +169,6 @@ public class PropImitationHooks {
     private static void setCertifiedPropsForGms() {
         if (sDisableGmsProps) {
             dlog("GMS prop imitation is disabled by user");
-            setSystemProperty(PROP_SECURITY_PATCH, Build.VERSION.SECURITY_PATCH);
-            setSystemProperty(PROP_FIRST_API_LEVEL,
-                    Integer.toString(Build.VERSION.DEVICE_INITIAL_SDK_INT));
             return;
         }
 
