@@ -38,6 +38,7 @@ import com.android.systemui.qs.FgsManagerController
 import com.android.systemui.qs.QSSecurityFooterUtils
 import com.android.systemui.qs.footer.data.model.UserSwitcherStatusModel
 import com.android.systemui.qs.footer.data.repository.ForegroundServicesRepository
+import com.android.systemui.qs.footer.data.repository.PowerButtonRepository
 import com.android.systemui.qs.footer.data.repository.UserSwitcherRepository
 import com.android.systemui.qs.footer.domain.model.SecurityButtonConfig
 import com.android.systemui.security.data.repository.SecurityRepository
@@ -62,6 +63,9 @@ interface FooterActionsInteractor {
 
     /** The current [UserSwitcherStatusModel]. */
     val userSwitcherStatus: Flow<UserSwitcherStatusModel>
+
+    /** Whether to show the power button */
+    val showPowerButton: Flow<Boolean>
 
     /**
      * The flow emitting `Unit` whenever a request to show the device monitoring dialog is fired.
@@ -106,6 +110,7 @@ constructor(
     securityRepository: SecurityRepository,
     foregroundServicesRepository: ForegroundServicesRepository,
     userSwitcherRepository: UserSwitcherRepository,
+    powerButtonRepository: PowerButtonRepository,
     broadcastDispatcher: BroadcastDispatcher,
     @Background bgDispatcher: CoroutineDispatcher,
 ) : FooterActionsInteractor {
@@ -122,6 +127,9 @@ constructor(
 
     override val userSwitcherStatus: Flow<UserSwitcherStatusModel> =
         userSwitcherRepository.userSwitcherStatus
+
+    override val showPowerButton: Flow<Boolean> =
+        powerButtonRepository.showPowerButton
 
     override val deviceMonitoringDialogRequests: Flow<Unit> =
         broadcastDispatcher.broadcastFlow(

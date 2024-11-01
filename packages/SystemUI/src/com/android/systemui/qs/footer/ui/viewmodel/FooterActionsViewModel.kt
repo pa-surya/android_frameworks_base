@@ -32,7 +32,6 @@ import com.android.systemui.dagger.qualifiers.Application
 import com.android.systemui.globalactions.GlobalActionsDialogLite
 import com.android.systemui.plugins.ActivityStarter
 import com.android.systemui.plugins.FalsingManager
-import com.android.systemui.qs.dagger.QSFlagsModule.PM_LITE_ENABLED
 import com.android.systemui.qs.footer.data.model.UserSwitcherStatusModel
 import com.android.systemui.qs.footer.domain.interactor.FooterActionsInteractor
 import com.android.systemui.util.icuMessageFormat
@@ -56,7 +55,6 @@ class FooterActionsViewModel(
     private val falsingManager: FalsingManager,
     private val globalActionsDialogLite: GlobalActionsDialogLite,
     private val activityStarter: ActivityStarter,
-    showPowerButton: Boolean,
 ) {
     /** The context themed with the Quick Settings colors. */
     private val context = ContextThemeWrapper(appContext, R.style.Theme_SystemUI_QuickSettings)
@@ -157,25 +155,31 @@ class FooterActionsViewModel(
         )
 
     /** The model for the power button. */
-    val power: FooterActionsButtonViewModel? =
-        if (showPowerButton) {
-            FooterActionsButtonViewModel(
-                id = R.id.pm_lite,
-                Icon.Resource(
-                    android.R.drawable.ic_lock_power_off,
-                    ContentDescription.Resource(R.string.accessibility_quick_settings_power_menu)
-                ),
-                iconTint =
-                    Utils.getColorAttrDefaultColor(
-                        context,
-                        R.attr.onShadeActive,
-                    ),
-                backgroundColor = R.attr.shadeActive,
-                this::onPowerButtonClicked,
-            )
-        } else {
-            null
+    val power: Flow<FooterActionsButtonViewModel?> =
+        footerActionsInteractor.showPowerButton
+            .map { showPowerButton ->
+                if (showPowerButton) {
+                    FooterActionsButtonViewModel(
+                        id = R.id.pm_lite,
+                        Icon.Resource(
+                            android.R.drawable.ic_lock_power_off,
+                            ContentDescription.Resource(
+                                R.string.accessibility_quick_settings_power_menu
+                            )
+                        ),
+                        iconTint =
+                            Utils.getColorAttrDefaultColor(
+                                context,
+                                R.attr.onShadeActive,
+                            ),
+                        backgroundColor = R.attr.shadeActive,
+                        this::onPowerButtonClicked,
+                    )
+                } else {
+                    null
+                }
         }
+        .distinctUntilChanged()
 
     /** Called when the visibility of the UI rendering this model should be changed. */
     fun onVisibilityChangeRequested(visible: Boolean) {
@@ -297,7 +301,6 @@ class FooterActionsViewModel(
         private val footerActionsInteractor: FooterActionsInteractor,
         private val globalActionsDialogLiteProvider: Provider<GlobalActionsDialogLite>,
         private val activityStarter: ActivityStarter,
-        @Named(PM_LITE_ENABLED) private val showPowerButton: Boolean,
     ) {
         /** Create a [FooterActionsViewModel] bound to the lifecycle of [lifecycleOwner]. */
         fun create(lifecycleOwner: LifecycleOwner): FooterActionsViewModel {
@@ -323,7 +326,6 @@ class FooterActionsViewModel(
                 falsingManager,
                 globalActionsDialogLite,
                 activityStarter,
-                showPowerButton,
             )
         }
     }

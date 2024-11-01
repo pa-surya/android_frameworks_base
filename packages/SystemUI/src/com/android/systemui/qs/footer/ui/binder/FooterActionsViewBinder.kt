@@ -69,16 +69,11 @@ class FooterActionsViewBinder @Inject constructor() {
         val foregroundServicesWithTextHolder = TextButtonViewHolder.createAndAdd(inflater, view)
         val foregroundServicesWithNumberHolder = NumberButtonViewHolder.createAndAdd(inflater, view)
         val userSwitcherHolder = IconButtonViewHolder.createAndAdd(inflater, view, isLast = false)
-        val settingsHolder =
-            IconButtonViewHolder.createAndAdd(inflater, view, isLast = viewModel.power == null)
+        val powerHolder = IconButtonViewHolder.createAndAdd(inflater, view, isLast = false)
+        val settingsHolder = IconButtonViewHolder.createAndAdd(inflater, view, isLast = true)
 
-        // Bind the static power and settings buttons.
+        // Bind the static settings button.
         bindButton(settingsHolder, viewModel.settings)
-
-        if (viewModel.power != null) {
-            val powerHolder = IconButtonViewHolder.createAndAdd(inflater, view, isLast = true)
-            bindButton(powerHolder, viewModel.power)
-        }
 
         // There are 2 lifecycle scopes we are using here:
         //   1) The scope created by [repeatWhenAttached] when [view] is attached, and destroyed
@@ -97,6 +92,7 @@ class FooterActionsViewBinder @Inject constructor() {
         var previousSecurity: FooterActionsSecurityButtonViewModel? = null
         var previousForegroundServices: FooterActionsForegroundServicesButtonViewModel? = null
         var previousUserSwitcher: FooterActionsButtonViewModel? = null
+        var previousPowerButton: FooterActionsButtonViewModel? = null
 
         // Set the initial visibility on the View directly so that we don't briefly show it for a
         // few frames before [viewModel.isVisible] is collected.
@@ -157,6 +153,16 @@ class FooterActionsViewBinder @Inject constructor() {
                         if (previousUserSwitcher != userSwitcher) {
                             bindButton(userSwitcherHolder, userSwitcher)
                             previousUserSwitcher = userSwitcher
+                        }
+                    }
+                }
+
+                // Power button.
+                launch {
+                    viewModel.power.collect { powerButton ->
+                        if (previousPowerButton != powerButton) {
+                            bindButton(powerHolder, powerButton)
+                            previousPowerButton = powerButton
                         }
                     }
                 }

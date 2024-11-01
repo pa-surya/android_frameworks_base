@@ -18,6 +18,8 @@ package com.android.systemui.qs.footer.dagger
 
 import com.android.systemui.qs.footer.data.repository.ForegroundServicesRepository
 import com.android.systemui.qs.footer.data.repository.ForegroundServicesRepositoryImpl
+import com.android.systemui.qs.footer.data.repository.PowerButtonRepository
+import com.android.systemui.qs.footer.data.repository.PowerButtonRepositoryImpl
 import com.android.systemui.qs.footer.data.repository.UserSwitcherRepository
 import com.android.systemui.qs.footer.data.repository.UserSwitcherRepositoryImpl
 import com.android.systemui.qs.footer.domain.interactor.FooterActionsInteractor
@@ -29,6 +31,8 @@ import dagger.Module
 @Module
 interface FooterActionsModule {
     @Binds fun userSwitcherRepository(impl: UserSwitcherRepositoryImpl): UserSwitcherRepository
+
+    @Binds fun powerButtonRepository(impl: PowerButtonRepositoryImpl): PowerButtonRepository
 
     @Binds
     fun foregroundServicesRepository(
