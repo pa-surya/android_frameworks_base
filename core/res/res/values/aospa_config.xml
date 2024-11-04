@@ -191,4 +191,9 @@
         Use with extreme caution. -->
     <string-array name="config_appLockAllowedSystemApps" translatable="false" />
 
+    <!-- Component name of the activity that allows choosing the usb function when a usb device is
+         plugged in. -->
+    <string name="config_usbFunctionActivity" translatable="false"
+            >com.android.systemui/com.android.systemui.usb.UsbFunctionActivity</string>
+
 </resources>
