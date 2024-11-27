@@ -20,6 +20,7 @@ import android.app.ActivityManager
 import android.content.res.Resources
 import android.os.SystemProperties
 import android.util.MathUtils
+import android.view.CrossWindowBlurListeners
 import android.view.CrossWindowBlurListeners.CROSS_WINDOW_BLUR_SUPPORTED
 import android.view.SurfaceControl
 import android.view.ViewRootImpl
@@ -117,6 +118,7 @@ class BlurUtils(
      */
     fun supportsBlursOnWindows(): Boolean {
         return CROSS_WINDOW_BLUR_SUPPORTED && ActivityManager.isHighEndGfx() &&
-                !SystemProperties.getBoolean("persist.sysui.disableBlur", false)
+                !SystemProperties.getBoolean("persist.sysui.disableBlur", false) &&
+                CrossWindowBlurListeners.getInstance().isCrossWindowBlurEnabled()
     }
 }
